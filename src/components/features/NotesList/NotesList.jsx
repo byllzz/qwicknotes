@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Star, ArrowDownUp, Download, FileText } from 'lucide-react';
+import { Star, ArrowDownUp, Download, FileText, Tags, Plus, X } from 'lucide-react';
 import NoteCard from './NoteCard';
 import NoteModal from './NoteModal';
 
@@ -21,13 +21,24 @@ const NotesList = ({
   setSortOption,
   showFavoritesOnly,
   setShowFavoritesOnly,
-  currentEditingId, // <--- New Prop
+  filterTag,
+  setFilterTag,
+  allTags,
+  isCreatingTag,
+  setIsCreatingTag,
+  newTagName,
+  setNewTagName,
+  handleCreateTag,
+  currentEditingId,
   onEdit,
   onDelete,
   onToggleFavorite,
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
+
+  const [isTagFilterOpen, setIsTagFilterOpen] = useState(false);
+  const tagFilterRef = useRef(null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedNote, setSelectedNote] = useState(null);
@@ -37,10 +48,14 @@ const NotesList = ({
     setIsModalOpen(true);
   };
 
+  // Handle clicks outside for both dropdowns
   useEffect(() => {
     const handleClickOutside = event => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsDropdownOpen(false);
+      }
+      if (tagFilterRef.current && !tagFilterRef.current.contains(event.target)) {
+        setIsTagFilterOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -48,6 +63,9 @@ const NotesList = ({
   }, []);
 
   const isSearchingEmpty = searchQuery.trim() !== '' && notes.length === 0;
+
+  // Get unique tags actually used in saved notes for the filter dropdown
+  const usedTags = [...new Set(rawNotes.flatMap(n => n.tags || []))];
 
   return (
     <div className="h-full flex flex-col">
@@ -57,6 +75,43 @@ const NotesList = ({
         </span>
 
         <div className="flex items-center gap-4 text-sm text-gray-500">
+          {/* Tag Filter Button */}
+          <div className="relative" ref={tagFilterRef}>
+            <button
+              onClick={() => setIsTagFilterOpen(!isTagFilterOpen)}
+              className={`flex items-center gap-1.5 hover:text-gray-800 transition-colors ${filterTag ? 'text-blue-500' : 'text-gray-500'}`}
+            >
+              <Tags size={18} />
+              <span className="font-medium">{filterTag ? filterTag : 'Tags'}</span>
+            </button>
+
+            {isTagFilterOpen && (
+              <div className="absolute right-0 top-8 mt-1 w-40 bg-white border border-gray-100 rounded-lg shadow-xl z-10 py-1 overflow-hidden">
+                <button
+                  onClick={() => {
+                    setFilterTag(null);
+                    setIsTagFilterOpen(false);
+                  }}
+                  className={`block w-full text-left px-4 py-2 text-xs hover:bg-gray-50 transition-colors ${!filterTag ? 'text-black font-semibold bg-gray-50' : 'text-gray-600'}`}
+                >
+                  All Tags
+                </button>
+                {usedTags.map(tag => (
+                  <button
+                    key={tag}
+                    onClick={() => {
+                      setFilterTag(tag);
+                      setIsTagFilterOpen(false);
+                    }}
+                    className={`block w-full text-left px-4 py-2 text-xs hover:bg-gray-50 transition-colors ${filterTag === tag ? 'text-black font-semibold bg-gray-50' : 'text-gray-600'}`}
+                  >
+                    #{tag}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
           <button
             onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
             className={`flex items-center gap-1.5 hover:text-gray-800 transition-colors ${showFavoritesOnly ? 'text-yellow-500' : 'text-gray-500'}`}
@@ -65,6 +120,7 @@ const NotesList = ({
             <span className="font-medium">Favorites</span>
           </button>
 
+          {/* Sort Dropdown */}
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -86,6 +142,48 @@ const NotesList = ({
                     {option}
                   </button>
                 ))}
+              </div>
+            )}
+          </div>
+
+          {/* Create Tag Button & Popup */}
+          <div className="relative">
+            <button
+              onClick={() => setIsCreatingTag(!isCreatingTag)}
+              className="flex items-center gap-1 hover:text-gray-800 border border-dashed border-gray-300 px-2 py-1 rounded hover:bg-gray-50 transition-colors"
+            >
+              <Plus size={14} /> <span className="text-xs">Create tag</span>
+            </button>
+
+            {isCreatingTag && (
+              <div className="absolute right-0 top-8 mt-1 w-48 bg-white border border-gray-100 rounded-lg shadow-xl z-10 p-3 flex flex-col gap-2 animate-in fade-in zoom-in-95 duration-100">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-gray-700">New Tag</span>
+                  <button
+                    onClick={() => {
+                      setIsCreatingTag(false);
+                      setNewTagName('');
+                    }}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+                <input
+                  autoFocus
+                  type="text"
+                  value={newTagName}
+                  onChange={e => setNewTagName(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && handleCreateTag()}
+                  placeholder="Tag name..."
+                  className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded focus:outline-none focus:border-black"
+                />
+                <button
+                  onClick={handleCreateTag}
+                  className="w-full py-1.5 bg-black text-white text-xs font-medium rounded hover:bg-gray-800 transition-colors"
+                >
+                  Create Tag
+                </button>
               </div>
             )}
           </div>
@@ -118,7 +216,7 @@ const NotesList = ({
               <NoteCard
                 key={note.id}
                 note={note}
-                currentEditingId={currentEditingId} // <--- Pass down
+                currentEditingId={currentEditingId}
                 onCardClick={handleCardClick}
                 onEdit={onEdit}
                 onDelete={onDelete}

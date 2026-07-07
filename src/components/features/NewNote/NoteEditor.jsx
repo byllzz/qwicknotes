@@ -67,6 +67,8 @@ const NoteEditor = ({
   setTextColor,
   tags,
   setTags,
+  allTags,
+  isCreatingTag,
   onSave,
   isTyping,
   isEditing,
@@ -90,12 +92,10 @@ const NoteEditor = ({
     setBgColor(value);
     setShowPicker(false);
   };
-
   const handleSelectText = value => {
     setTextColor(value);
     setShowPicker(false);
   };
-
   const handleSelectGradient = (bg, text) => {
     setBgColor(bg);
     setTextColor(text);
@@ -105,6 +105,16 @@ const NoteEditor = ({
   const currentBGLabel = BG_COLORS.find(c => c.value === bgColor)?.label || 'Default';
   const currentTextLabel = TEXT_COLORS.find(c => c.value === textColor)?.label || 'Black';
   const matchedGradient = GRADIENT_COLORS.find(g => g.bg === bgColor && g.text === textColor);
+
+  // Toggle tag for this note
+  const toggleTag = tag => {
+    if (isCreatingTag) return; // Double safety check
+    if (tags.includes(tag)) {
+      setTags(tags.filter(t => t !== tag));
+    } else {
+      setTags([...tags, tag]);
+    }
+  };
 
   return (
     <div
@@ -131,6 +141,7 @@ const NoteEditor = ({
         </div>
       </div>
 
+      {/* Title Input */}
       <input
         type="text"
         value={title}
@@ -138,6 +149,28 @@ const NoteEditor = ({
         placeholder="Note title"
         className={`w-full text-lg font-medium text-gray-800 placeholder-gray-300 bg-transparent border-b pb-2 mb-6 focus:outline-none focus:border-gray-400 transition-colors ${isEditing ? 'border-blue-400' : 'border-gray-200'}`}
       />
+
+      {/* NEW: Tags Section (BEFORE Card Style) */}
+      <div className="mb-4">
+        <span className="text-xs text-gray-500 font-medium block mb-1.5">Tags</span>
+        <div className="flex flex-wrap gap-1.5">
+          {allTags.map(tag => (
+            <button
+              key={tag}
+              onClick={() => toggleTag(tag)}
+              className={`px-2.5 py-1 rounded-full text-[10px] font-medium transition-all ${
+                isCreatingTag
+                  ? 'opacity-50 cursor-not-allowed pointer-events-none'
+                  : tags.includes(tag)
+                    ? 'bg-black text-white border border-black'
+                    : 'bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              {tag}
+            </button>
+          ))}
+        </div>
+      </div>
 
       {/* Color Style Picker */}
       <div className="relative mb-4" ref={pickerRef}>
@@ -165,7 +198,7 @@ const NoteEditor = ({
           <ChevronDown size={14} className="text-gray-400 ml-1" />
         </button>
 
-        {/* UPDATED: 3-Column Horizontal Popup */}
+        {/* 3-Column Horizontal Popup */}
         {showPicker && (
           <div className="absolute top-12 left-0 z-20 bg-white border border-gray-200 rounded-xl shadow-xl p-3 w-[340px] flex flex-row gap-3 items-start animate-in fade-in zoom-in-95 duration-100">
             {/* Column 1: Gradients */}
@@ -189,9 +222,7 @@ const NoteEditor = ({
                 ))}
               </div>
             </div>
-
             <div className="w-px bg-gray-200 self-stretch"></div>
-
             {/* Column 2: Background Colors */}
             <div className="flex flex-col items-center flex-1 gap-1.5">
               <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">
@@ -219,9 +250,7 @@ const NoteEditor = ({
                 ))}
               </div>
             </div>
-
             <div className="w-px bg-gray-200 self-stretch"></div>
-
             {/* Column 3: Text Colors */}
             <div className="flex flex-col items-center flex-1 gap-1.5">
               <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">

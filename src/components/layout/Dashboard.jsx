@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'; // Import useEffect
+import React, { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import NoteEditor from '../features/NewNote/NoteEditor';
 import NotesList from '../features/NotesList/NotesList';
@@ -12,6 +12,7 @@ const initialDraft = {
   bgColor: '',
   textColor: '#1f2937',
   editorFavorite: false,
+  tags: [], // Added tags to the draft
 };
 
 const Dashboard = () => {
@@ -19,51 +20,59 @@ const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useLocalStorage('qwicknotes_search', '');
   const [sortOption, setSortOption] = useLocalStorage('qwicknotes_sort', 'Newest First');
   const [showFavoritesOnly, setShowFavoritesOnly] = useLocalStorage('qwicknotes_show_favs', false);
+  const [filterTag, setFilterTag] = useLocalStorage('qwicknotes_filter_tag', null); // New filter state
+  const [allTags, setAllTags] = useLocalStorage('qwicknotes_all_tags', ['Work', 'Personal']); // Global tag list with defaults
   const [editorDraft, setEditorDraft] = useLocalStorage('qwicknotes_editor_draft', initialDraft);
 
-  const { title, content, bgColor, textColor, editorFavorite } = editorDraft;
+  const { title, content, bgColor, textColor, editorFavorite, tags } = editorDraft;
 
   const setTitle = val => setEditorDraft(prev => ({ ...prev, title: val }));
   const setContent = val => setEditorDraft(prev => ({ ...prev, content: val }));
   const setBgColor = val => setEditorDraft(prev => ({ ...prev, bgColor: val }));
   const setTextColor = val => setEditorDraft(prev => ({ ...prev, textColor: val }));
   const setEditorFavorite = val => setEditorDraft(prev => ({ ...prev, editorFavorite: val }));
+  const setEditorTags = val => setEditorDraft(prev => ({ ...prev, tags: val }));
 
-  // Persist editingId in localStorage
   const [editingId, setEditingId] = useLocalStorage('qwicknotes_editing_id', null);
-
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [noteToDelete, setNoteToDelete] = useState(null);
 
+  // State for the Create Tag Popup
+  const [isCreatingTag, setIsCreatingTag] = useState(false);
+  const [newTagName, setNewTagName] = useState('');
+
   const isTyping = title.trim() !== '' || content.trim() !== '';
 
-  // SYNC LOGIC: If user refreshes the page while editing, reload the note into the Left Panel
+  // SYNC LOGIC: Reload editing state on refresh
   useEffect(() => {
     if (editingId) {
       const noteToEdit = notes.find(n => n.id === editingId);
       if (noteToEdit) {
-        // Override the draft with the actual note's current data to ensure perfect sync
         setEditorDraft({
           title: noteToEdit.title,
           content: noteToEdit.content,
           bgColor: noteToEdit.bgColor || '',
           textColor: noteToEdit.textColor || '#1f2937',
           editorFavorite: noteToEdit.isFavorite || false,
+          tags: noteToEdit.tags || [],
         });
       } else {
-        // If note doesn't exist anymore (deleted in another tab), reset the editor
         setEditingId(null);
         setEditorDraft(initialDraft);
       }
     }
-  }, []); // Runs only once on component mount
+  }, []);
 
+  // Filter Logic (Search + Favorites + Tags)
   const filteredNotes = notes.filter(note => {
     const matchesSearch =
       note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       note.content.toLowerCase().includes(searchQuery.toLowerCase());
-    if (showFavoritesOnly) return matchesSearch && note.isFavorite === true;
+
+    if (showFavoritesOnly && !note.isFavorite) return false;
+    if (filterTag && !(note.tags && note.tags.includes(filterTag))) return false;
+
     return matchesSearch;
   });
 
@@ -93,6 +102,15 @@ const Dashboard = () => {
 
   const displayNotes = applySort(filteredNotes, sortOption);
 
+  const handleCreateTag = () => {
+    const trimmed = newTagName.trim();
+    if (trimmed && !allTags.includes(trimmed)) {
+      setAllTags([trimmed, ...allTags]);
+    }
+    setNewTagName('');
+    setIsCreatingTag(false);
+  };
+
   const handleSaveNote = () => {
     if (!title.trim() && !content.trim()) return;
     if (title.trim() && !content.trim()) {
@@ -114,6 +132,7 @@ const Dashboard = () => {
                 bgColor,
                 textColor,
                 isFavorite: editorFavorite,
+                tags: tags, // Save tags
                 updatedAt: new Date().toISOString(),
               }
             : n,
@@ -128,6 +147,7 @@ const Dashboard = () => {
         bgColor,
         textColor,
         isFavorite: editorFavorite,
+        tags: tags, // Save tags
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
@@ -143,6 +163,7 @@ const Dashboard = () => {
       bgColor: note.bgColor || '',
       textColor: note.textColor || '#1f2937',
       editorFavorite: note.isFavorite || false,
+      tags: note.tags || [],
     });
     setEditingId(note.id);
   };
@@ -200,8 +221,10 @@ const Dashboard = () => {
             setBgColor={setBgColor}
             textColor={textColor}
             setTextColor={setTextColor}
-            tags={[]}
-            setTags={() => {}}
+            tags={tags}
+            setTags={setEditorTags}
+            allTags={allTags}
+            isCreatingTag={isCreatingTag} // Pass creating state to dim tags
             onSave={handleSaveNote}
             isTyping={isTyping}
             isEditing={!!editingId}
@@ -218,6 +241,14 @@ const Dashboard = () => {
             setSortOption={setSortOption}
             showFavoritesOnly={showFavoritesOnly}
             setShowFavoritesOnly={setShowFavoritesOnly}
+            filterTag={filterTag}
+            setFilterTag={setFilterTag}
+            allTags={allTags}
+            isCreatingTag={isCreatingTag}
+            setIsCreatingTag={setIsCreatingTag}
+            newTagName={newTagName}
+            setNewTagName={setNewTagName}
+            handleCreateTag={handleCreateTag}
             currentEditingId={editingId}
             onEdit={handleEditNote}
             onDelete={handleDeleteNote}
