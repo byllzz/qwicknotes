@@ -1,4 +1,3 @@
-import React from 'react';
 import { Star, Clock, Pencil, Trash2 } from 'lucide-react';
 
 const formatDateTime = dateString => {
@@ -13,7 +12,7 @@ const formatDateTime = dateString => {
   return `${month}/${day}/${year} at ${hours}:${minutes} ${ampm}`;
 };
 
-const NoteCard = ({ note, onEdit, onDelete, onToggleFavorite }) => {
+const NoteCard = ({ note, onCardClick, onEdit, onDelete, onToggleFavorite }) => {
   const charSize = note.content.length;
   const sizeLabel = charSize === 0 ? 'Empty' : `${charSize} chars`;
 
@@ -23,6 +22,7 @@ const NoteCard = ({ note, onEdit, onDelete, onToggleFavorite }) => {
 
   return (
     <div
+      onClick={() => onCardClick(note)} /* <--- RESTORE CLICK HANDLER */
       className="group bg-white rounded-xl shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] border border-gray-200 p-4 hover:shadow-md cursor-pointer transition-all flex flex-col justify-between gap-2"
       style={{
         backgroundColor: note.bgColor || '#ffffff',

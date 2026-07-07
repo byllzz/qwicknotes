@@ -1,6 +1,7 @@
-import { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Star, ArrowDownUp, Download, FileText } from 'lucide-react';
 import NoteCard from './NoteCard';
+import NoteModal from './NoteModal'; // <--- RE-IMPORT MODAL
 
 const sortOptions = [
   'Newest First',
@@ -27,6 +28,15 @@ const NotesList = ({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
+  // Restore Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedNote, setSelectedNote] = useState(null);
+
+  const handleCardClick = note => {
+    setSelectedNote(note);
+    setIsModalOpen(true);
+  };
+
   useEffect(() => {
     const handleClickOutside = event => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -47,7 +57,6 @@ const NotesList = ({
         </span>
 
         <div className="flex items-center gap-4 text-sm text-gray-500">
-          {/* NEW: Favorites Filter Button with Label */}
           <button
             onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
             className={`flex items-center gap-1.5 hover:text-gray-800 transition-colors ${showFavoritesOnly ? 'text-yellow-500' : 'text-gray-500'}`}
@@ -56,7 +65,6 @@ const NotesList = ({
             <span className="font-medium">Favorites</span>
           </button>
 
-          {/* Sort Dropdown */}
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -64,7 +72,6 @@ const NotesList = ({
             >
               {sortOption} <ArrowDownUp size={14} />
             </button>
-
             {isDropdownOpen && (
               <div className="absolute right-0 top-8 mt-1 w-40 bg-white border border-gray-100 rounded-lg shadow-xl z-10 py-1 overflow-hidden">
                 {sortOptions.map(option => (
@@ -96,7 +103,6 @@ const NotesList = ({
               <FileText size={40} className="text-gray-300" />
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-6 border-2 border-gray-200 bg-white"></div>
             </div>
-
             {isSearchingEmpty ? (
               <>
                 <p className="text-gray-400 font-medium text-base">No matching notes found</p>
@@ -112,14 +118,24 @@ const NotesList = ({
               <NoteCard
                 key={note.id}
                 note={note}
+                onCardClick={handleCardClick} // <--- PASS HANDLER
                 onEdit={onEdit}
                 onDelete={onDelete}
-                onToggleFavorite={onToggleFavorite} // Pass favorite toggle down
+                onToggleFavorite={onToggleFavorite}
               />
             ))}
           </div>
         )}
       </div>
+
+      {/* Restore Note Modal */}
+      <NoteModal
+        note={selectedNote}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onEdit={onEdit}
+        onDelete={onDelete}
+      />
     </div>
   );
 };
