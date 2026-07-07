@@ -1,6 +1,7 @@
 import { useState } from 'react';
-import NoteEditor from '../featrues/NewNote/NoteEditor';
-import NotesList from '../featrues/NotesList/NotesList';
+import NoteEditor from '../features/NewNote/NoteEditor';
+import NotesList from '../features/NotesList/NotesList';
+import ConfirmationModal from '../common/ConfirmationModal';
 
 const Dashboard = () => {
   // Main State
@@ -10,23 +11,52 @@ const Dashboard = () => {
   const [color, setColor] = useState('#000000');
   const [tags, setTags] = useState([]);
 
+  // Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Normal Save Logic
   const handleSaveNote = () => {
+    // If both are empty, do nothing
     if (!title.trim() && !content.trim()) return;
 
+    // If there is a title but NO content, trigger the popup
+    if (title.trim() && !content.trim()) {
+      setIsModalOpen(true);
+      return;
+    }
+
+    // Otherwise, save immediately (Both Title & Content exist)
+    createAndSaveNote(content);
+  };
+
+  // Function to handle the actual saving
+  const createAndSaveNote = noteContent => {
     const newNote = {
       id: Date.now(),
       title: title.trim() || 'Untitled',
-      content: content.trim(),
+      content: noteContent.trim(),
       color: color,
       tags: tags,
       createdAt: new Date().toISOString(),
     };
 
-    setNotes([newNote, ...notes]); // Add new note to top
+    setNotes([newNote, ...notes]);
     // Clear the form
     setTitle('');
     setContent('');
     setTags([]);
+  };
+
+  // Modal Handlers
+  const handleModalConfirm = () => {
+    // User clicked Confirm - Save with a default sample description
+    createAndSaveNote('No description provided.');
+    setIsModalOpen(false);
+  };
+
+  const handleModalCancel = () => {
+    // User clicked Cancel - Close modal and keep the user's typed title
+    setIsModalOpen(false);
   };
 
   return (
@@ -50,6 +80,15 @@ const Dashboard = () => {
       <div className="flex-1 h-full">
         <NotesList notes={notes} />
       </div>
+
+      {/* Render the Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={isModalOpen}
+        onClose={handleModalCancel}
+        onConfirm={handleModalConfirm}
+        title="Empty Description"
+        message="You haven't added any content to this note. Proceed with a default description?"
+      />
     </div>
   );
 };
