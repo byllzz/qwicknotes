@@ -15,7 +15,6 @@ import {
   Check,
 } from 'lucide-react';
 
-// Expanded Palettes
 const BG_COLORS = [
   { label: 'Default', value: '' },
   { label: 'White', value: '#ffffff' },
@@ -46,7 +45,6 @@ const TEXT_COLORS = [
   { label: 'Rose', value: '#e11d48' },
 ];
 
-// New Pre-made Gradients (Sets BOTH bg & text)
 const GRADIENT_COLORS = [
   { label: 'Sunset', bg: '#fef08a', text: '#b45309' },
   { label: 'Midnight', bg: '#1e293b', text: '#f8fafc' },
@@ -63,8 +61,6 @@ const NoteEditor = ({
   setTitle,
   content,
   setContent,
-  borderColor,
-  setBorderColor,
   bgColor,
   setBgColor,
   textColor,
@@ -80,7 +76,6 @@ const NoteEditor = ({
   const [showPicker, setShowPicker] = useState(false);
   const pickerRef = useRef(null);
 
-  // Close picker when clicking outside
   useEffect(() => {
     const handleClickOutside = event => {
       if (pickerRef.current && !pickerRef.current.contains(event.target)) {
@@ -101,24 +96,20 @@ const NoteEditor = ({
     setShowPicker(false);
   };
 
-  // New Gradient Handler
   const handleSelectGradient = (bg, text) => {
     setBgColor(bg);
     setTextColor(text);
     setShowPicker(false);
   };
 
-  // Determine label to show on the button
   const currentBGLabel = BG_COLORS.find(c => c.value === bgColor)?.label || 'Default';
   const currentTextLabel = TEXT_COLORS.find(c => c.value === textColor)?.label || 'Black';
-  // Check if it matches a gradient preset to show a nicer label (Optional UX touch)
   const matchedGradient = GRADIENT_COLORS.find(g => g.bg === bgColor && g.text === textColor);
 
   return (
     <div
       className={`bg-white rounded-xl shadow-sm border ${isEditing ? 'border-blue-400 border-2 bg-blue-50/20' : 'border-gray-100'} p-6 h-full flex flex-col relative transition-all duration-200`}
     >
-      {/* Header & Star */}
       <div className="flex justify-between items-start mb-4">
         <h2
           className={`text-2xl ${isEditing ? 'text-blue-600 font-medium' : 'text-gray-700 font-light'}`}
@@ -140,7 +131,6 @@ const NoteEditor = ({
         </div>
       </div>
 
-      {/* Title Input */}
       <input
         type="text"
         value={title}
@@ -148,23 +138,6 @@ const NoteEditor = ({
         placeholder="Note title"
         className={`w-full text-lg font-medium text-gray-800 placeholder-gray-300 bg-transparent border-b pb-2 mb-6 focus:outline-none focus:border-gray-400 transition-colors ${isEditing ? 'border-blue-400' : 'border-gray-200'}`}
       />
-
-      {/* Border Color Slider */}
-      <div className="flex items-center gap-4 mb-4">
-        <span className="text-xs text-gray-500 font-medium">Accent Color</span>
-        <input
-          type="range"
-          min="#000000"
-          max="#ffffff"
-          value={borderColor}
-          onChange={e => setBorderColor(e.target.value)}
-          className="flex-1 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-black"
-        />
-        <div
-          className="w-5 h-5 rounded-full border border-gray-200"
-          style={{ backgroundColor: borderColor }}
-        ></div>
-      </div>
 
       {/* Color Style Picker */}
       <div className="relative mb-4" ref={pickerRef}>
@@ -192,20 +165,20 @@ const NoteEditor = ({
           <ChevronDown size={14} className="text-gray-400 ml-1" />
         </button>
 
-        {/* The Popup */}
+        {/* The Popup - 3 Columns Layout */}
         {showPicker && (
           <div className="absolute top-12 left-0 z-20 bg-white border border-gray-200 rounded-xl shadow-xl p-4 w-72 flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-100">
-            {/* New Section: Gradients */}
+            {/* Gradients - 3 Columns */}
             <div>
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
                 ✨ Quick Gradients
               </p>
-              <div className="flex flex-wrap gap-2">
+              <div className="grid grid-cols-3 gap-2">
                 {GRADIENT_COLORS.map(g => (
                   <button
                     key={g.label}
                     onClick={() => handleSelectGradient(g.bg, g.text)}
-                    className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center hover:scale-110 transition-all"
+                    className="w-full aspect-square rounded-full border border-gray-200 flex items-center justify-center hover:scale-110 transition-all"
                     style={{ backgroundColor: g.bg }}
                     title={g.label}
                   >
@@ -219,17 +192,17 @@ const NoteEditor = ({
 
             <div className="w-full h-px bg-gray-100"></div>
 
-            {/* Background Colors */}
+            {/* Background Colors - 3 Columns */}
             <div>
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
                 Background
               </p>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="grid grid-cols-3 gap-2">
                 {BG_COLORS.map(c => (
                   <button
                     key={c.label}
                     onClick={() => handleSelectBG(c.value)}
-                    className={`w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center transition-all hover:scale-110 ${bgColor === c.value ? 'ring-2 ring-black ring-offset-1' : ''}`}
+                    className={`w-full aspect-square rounded-full border border-gray-200 flex items-center justify-center transition-all hover:scale-110 ${bgColor === c.value ? 'ring-2 ring-black ring-offset-1' : ''}`}
                     style={{ backgroundColor: c.value || '#ffffff' }}
                     title={c.label}
                   >
@@ -249,17 +222,17 @@ const NoteEditor = ({
 
             <div className="w-full h-px bg-gray-100"></div>
 
-            {/* Text Colors */}
+            {/* Text Colors - 3 Columns */}
             <div>
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
                 Text Color
               </p>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="grid grid-cols-3 gap-2">
                 {TEXT_COLORS.map(c => (
                   <button
                     key={c.label}
                     onClick={() => handleSelectText(c.value)}
-                    className={`w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center transition-all hover:scale-110 ${textColor === c.value ? 'ring-2 ring-black ring-offset-1' : ''}`}
+                    className={`w-full aspect-square rounded-full border border-gray-200 flex items-center justify-center transition-all hover:scale-110 ${textColor === c.value ? 'ring-2 ring-black ring-offset-1' : ''}`}
                     style={{ backgroundColor: c.value }}
                     title={c.label}
                   >
@@ -311,7 +284,6 @@ const NoteEditor = ({
         </button>
       </div>
 
-      {/* Text Area */}
       <textarea
         value={content}
         onChange={e => setContent(e.target.value)}
@@ -319,7 +291,6 @@ const NoteEditor = ({
         className={`flex-1 w-full bg-transparent text-gray-700 placeholder-gray-400 resize-none focus:outline-none min-h-[150px] ${isEditing ? 'bg-blue-50/30 p-2 rounded' : ''}`}
       />
 
-      {/* Save Button */}
       <button
         onClick={onSave}
         className={`mt-4 w-full py-3 font-medium rounded-lg transition-colors ${isEditing ? 'bg-blue-500 hover:bg-blue-600 text-white' : 'bg-gray-400 hover:bg-gray-500 text-white'}`}
