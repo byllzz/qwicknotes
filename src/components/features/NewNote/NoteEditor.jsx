@@ -15,6 +15,7 @@ import {
   Check,
   Plus,
   X,
+  Trash2,
 } from 'lucide-react';
 
 const BG_COLORS = [
@@ -75,6 +76,8 @@ const NoteEditor = ({
   newTagName,
   setNewTagName,
   handleCreateTag,
+  onDeleteTag,
+  onDeleteAllTags, // New Props
   onSave,
   isTyping,
   isEditing,
@@ -84,10 +87,16 @@ const NoteEditor = ({
   const [showPicker, setShowPicker] = useState(false);
   const pickerRef = useRef(null);
 
+  const [isManageTagsOpen, setIsManageTagsOpen] = useState(false);
+  const manageTagsRef = useRef(null);
+
   useEffect(() => {
     const handleClickOutside = event => {
       if (pickerRef.current && !pickerRef.current.contains(event.target)) {
         setShowPicker(false);
+      }
+      if (manageTagsRef.current && !manageTagsRef.current.contains(event.target)) {
+        setIsManageTagsOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -154,10 +163,12 @@ const NoteEditor = ({
         className={`w-full text-lg font-medium text-gray-800 placeholder-gray-300 bg-transparent border-b pb-2 mb-6 focus:outline-none focus:border-gray-400 transition-colors ${isEditing ? 'border-blue-400' : 'border-gray-200'}`}
       />
 
-      {/* Tags Section (Now with popup) */}
-      <div className="mb-4 relative">
+      {/* Tags Section with Management */}
+      <div className="mb-4 relative" ref={manageTagsRef}>
         <span className="text-xs text-gray-500 font-medium block mb-1.5">Tags</span>
-        <div className="flex flex-wrap gap-1.5 items-center">
+        <div className="flex flex-wrap gap-1.5 items-center pr-8">
+          {' '}
+          {/* Added pr-8 for space */}
           {allTags.map(tag => (
             <button
               key={tag}
@@ -173,8 +184,6 @@ const NoteEditor = ({
               {tag}
             </button>
           ))}
-
-          {/* New "Add Tag" Button */}
           <button
             onClick={() => setIsCreatingTag(!isCreatingTag)}
             className="flex items-center gap-0.5 px-2 py-1 rounded-full border border-dashed border-gray-300 text-[10px] text-gray-500 hover:text-gray-800 hover:bg-gray-50 transition-colors"
@@ -183,7 +192,15 @@ const NoteEditor = ({
           </button>
         </div>
 
-        {/* NEW: Create Tag Popup (opening below the Add button) */}
+        {/* Manage Tags Trigger (Trash Icon) */}
+        <button
+          onClick={() => setIsManageTagsOpen(!isManageTagsOpen)}
+          className="absolute right-0 top-0 text-gray-400 hover:text-red-500 transition-colors mt-1"
+        >
+          <Trash2 size={16} />
+        </button>
+
+        {/* Create Tag Popup */}
         {isCreatingTag && (
           <div className="absolute top-full left-0 mt-2 z-20 bg-white border border-gray-200 rounded-lg shadow-lg p-3 w-48 animate-in fade-in zoom-in-95 duration-100">
             <div className="flex items-center justify-between mb-1.5">
@@ -212,6 +229,51 @@ const NoteEditor = ({
               className="w-full py-1 bg-black text-white text-[10px] font-medium rounded hover:bg-gray-800 transition-colors"
             >
               Create
+            </button>
+          </div>
+        )}
+
+        {/* Manage Tags Popup */}
+        {isManageTagsOpen && (
+          <div className="absolute right-0 top-full mt-2 z-20 bg-white border border-gray-200 rounded-lg shadow-lg p-3 w-56 animate-in fade-in zoom-in-95 duration-100">
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+              Manage Tags
+            </p>
+            <div className="max-h-40 overflow-y-auto flex flex-col gap-1.5 mb-3">
+              {allTags.length === 0 ? (
+                <p className="text-[10px] text-gray-400 italic text-center">No tags created yet.</p>
+              ) : (
+                allTags.map(tag => (
+                  <div
+                    key={tag}
+                    className="flex items-center justify-between bg-gray-50 px-2 py-1 rounded"
+                  >
+                    <span className="text-[10px] font-medium text-gray-700">#{tag}</span>
+                    <button
+                      onClick={() => {
+                        onDeleteTag(tag);
+                        setIsManageTagsOpen(false);
+                      }}
+                      className="text-gray-400 hover:text-red-500 transition-colors"
+                    >
+                      <X size={12} />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+            <button
+              onClick={() => {
+                if (
+                  window.confirm('Delete all tags? This will remove them from all saved notes.')
+                ) {
+                  onDeleteAllTags();
+                  setIsManageTagsOpen(false);
+                }
+              }}
+              className="w-full py-1.5 bg-red-50 text-red-600 text-[10px] font-medium rounded hover:bg-red-100 transition-colors flex items-center justify-center gap-1"
+            >
+              <Trash2 size={12} /> Delete All
             </button>
           </div>
         )}

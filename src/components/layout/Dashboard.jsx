@@ -38,7 +38,6 @@ const Dashboard = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [noteToDelete, setNoteToDelete] = useState(null);
 
-  // Moved Tag Creation State here
   const [isCreatingTag, setIsCreatingTag] = useState(false);
   const [newTagName, setNewTagName] = useState('');
 
@@ -63,7 +62,6 @@ const Dashboard = () => {
     }
   }, []);
 
-  // Handle Create Tag logic
   const handleCreateTag = () => {
     const trimmed = newTagName.trim();
     if (trimmed && !allTags.includes(trimmed)) {
@@ -71,6 +69,37 @@ const Dashboard = () => {
     }
     setNewTagName('');
     setIsCreatingTag(false);
+  };
+
+  // Delete a single tag globally
+  const handleDeleteGlobalTag = tagToDelete => {
+    // 1. Remove from the global list
+    setAllTags(prev => prev.filter(t => t !== tagToDelete));
+    // 2. Remove from all existing saved notes
+    setNotes(prevNotes =>
+      prevNotes.map(n => ({
+        ...n,
+        tags: n.tags ? n.tags.filter(t => t !== tagToDelete) : [],
+      })),
+    );
+    // 3. Remove from the active editor draft if currently selected
+    if (tags.includes(tagToDelete)) {
+      setEditorTags(tags.filter(t => t !== tagToDelete));
+    }
+    // 4. Clear the tag filter if it was filtering on this deleted tag
+    if (filterTag === tagToDelete) setFilterTag(null);
+  };
+
+  // Delete all tags globally
+  const handleDeleteAllGlobalTags = () => {
+    // 1. Clear the global list
+    setAllTags([]);
+    // 2. Clear tags from all existing saved notes
+    setNotes(prevNotes => prevNotes.map(n => ({ ...n, tags: [] })));
+    // 3. Clear tags from the active editor draft
+    setEditorTags([]);
+    // 4. Clear the tag filter
+    setFilterTag(null);
   };
 
   const filteredNotes = notes.filter(note => {
@@ -223,12 +252,13 @@ const Dashboard = () => {
             tags={tags}
             setTags={setEditorTags}
             allTags={allTags}
-            // Pass the Tag creation props down to the Editor
             isCreatingTag={isCreatingTag}
             setIsCreatingTag={setIsCreatingTag}
             newTagName={newTagName}
             setNewTagName={setNewTagName}
             handleCreateTag={handleCreateTag}
+            onDeleteTag={handleDeleteGlobalTag} // Pass delete single
+            onDeleteAllTags={handleDeleteAllGlobalTags} // Pass delete all
             onSave={handleSaveNote}
             isTyping={isTyping}
             isEditing={!!editingId}
