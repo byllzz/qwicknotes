@@ -25,20 +25,26 @@ const NoteCard = ({ note, onCardClick, onEdit, onDelete, onToggleFavorite, curre
 
   return (
     <div
-      onClick={() => onCardClick(note)}
-      className="group bg-white rounded-xl shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] border border-gray-200 p-4 hover:shadow-md cursor-pointer transition-all flex flex-col justify-between gap-2"
+      onClick={() => {
+        // Completely block card click (Modal open) if currently being edited
+        if (!isEditingThisCard) onCardClick(note);
+      }}
+      className={`group bg-white rounded-xl shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] border border-gray-200 p-4 hover:shadow-md cursor-pointer transition-all flex flex-col justify-between gap-2 ${
+        isEditingThisCard ? 'opacity-60' : ''
+      }`}
       style={{
         backgroundColor: note.bgColor || '#ffffff',
         color: note.textColor || '#1f2937',
       }}
+      title={isEditingThisCard ? 'Currently being edited in the left panel' : ''}
     >
       <div className="flex items-start gap-3">
         <button
           onClick={e => {
             e.stopPropagation();
-            onToggleFavorite(note.id);
+            if (!isEditingThisCard) onToggleFavorite(note.id);
           }}
-          className={`mt-1 shrink-0 hover:scale-110 transition-transform ${note.isFavorite ? 'text-yellow-400' : 'text-gray-300 hover:text-yellow-400'}`}
+          className={`mt-1 shrink-0 hover:scale-110 transition-transform ${note.isFavorite ? 'text-yellow-400' : 'text-gray-300 hover:text-yellow-400'} ${isEditingThisCard ? 'cursor-not-allowed' : ''}`}
         >
           <Star size={16} fill={note.isFavorite ? 'currentColor' : 'none'} />
         </button>
@@ -59,24 +65,29 @@ const NoteCard = ({ note, onCardClick, onEdit, onDelete, onToggleFavorite, curre
           className="flex items-center gap-3 text-[10px] font-medium"
           onClick={e => e.stopPropagation()}
         >
+          {/* DISABLED EDIT BUTTON LOGIC */}
           <button
-            onClick={() => onEdit(note)}
-            className="hover:opacity-100 opacity-70 flex items-center gap-1 transition-opacity"
+            onClick={() => {
+              if (!isEditingThisCard) onEdit(note);
+            }}
+            className={`flex items-center gap-1 transition-opacity ${
+              isEditingThisCard ? 'opacity-30 cursor-not-allowed' : 'opacity-70 hover:opacity-100'
+            }`}
+            title={isEditingThisCard ? 'Cannot edit while already in left panel' : 'Edit note'}
           >
             <Pencil size={11} /> Edit
           </button>
+
           <span className="opacity-50 font-normal text-[10px]">{sizeLabel}</span>
 
           {/* DISABLED DELETE BUTTON LOGIC */}
           <button
             onClick={() => {
-              if (!isEditingThisCard) {
-                onDelete(note.id);
-              }
+              if (!isEditingThisCard) onDelete(note.id);
             }}
             className={`flex items-center gap-1 transition-colors ${
               isEditingThisCard
-                ? 'text-gray-300 cursor-not-allowed opacity-50'
+                ? 'text-gray-300 cursor-not-allowed opacity-30'
                 : 'text-red-400 hover:text-red-600'
             }`}
             title={isEditingThisCard ? 'Cannot delete while editing in left panel' : 'Delete note'}
