@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react'; // Import useEffect
 import { Search } from 'lucide-react';
 import NoteEditor from '../features/NewNote/NoteEditor';
 import NotesList from '../features/NotesList/NotesList';
@@ -29,14 +29,35 @@ const Dashboard = () => {
   const setTextColor = val => setEditorDraft(prev => ({ ...prev, textColor: val }));
   const setEditorFavorite = val => setEditorDraft(prev => ({ ...prev, editorFavorite: val }));
 
-  const [editingId, setEditingId] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  // Persist editingId in localStorage
+  const [editingId, setEditingId] = useLocalStorage('qwicknotes_editing_id', null);
 
-  // Delete Modal State
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [noteToDelete, setNoteToDelete] = useState(null);
 
   const isTyping = title.trim() !== '' || content.trim() !== '';
+
+  // SYNC LOGIC: If user refreshes the page while editing, reload the note into the Left Panel
+  useEffect(() => {
+    if (editingId) {
+      const noteToEdit = notes.find(n => n.id === editingId);
+      if (noteToEdit) {
+        // Override the draft with the actual note's current data to ensure perfect sync
+        setEditorDraft({
+          title: noteToEdit.title,
+          content: noteToEdit.content,
+          bgColor: noteToEdit.bgColor || '',
+          textColor: noteToEdit.textColor || '#1f2937',
+          editorFavorite: noteToEdit.isFavorite || false,
+        });
+      } else {
+        // If note doesn't exist anymore (deleted in another tab), reset the editor
+        setEditingId(null);
+        setEditorDraft(initialDraft);
+      }
+    }
+  }, []); // Runs only once on component mount
 
   const filteredNotes = notes.filter(note => {
     const matchesSearch =
@@ -132,15 +153,12 @@ const Dashboard = () => {
     );
   };
 
-  // Open the detailed Delete Modal
   const handleDeleteNote = id => {
     setNoteToDelete(id);
     setIsDeleteModalOpen(true);
   };
 
-  // Handle the actual deletion after user confirms
   const handleDeleteConfirmed = () => {
-    // If we are editing this note, reset the editor
     if (editingId === noteToDelete) {
       setEditingId(null);
       setEditorDraft(initialDraft);
@@ -200,7 +218,7 @@ const Dashboard = () => {
             setSortOption={setSortOption}
             showFavoritesOnly={showFavoritesOnly}
             setShowFavoritesOnly={setShowFavoritesOnly}
-            currentEditingId={editingId} // Pass down the ID for disabling delete
+            currentEditingId={editingId}
             onEdit={handleEditNote}
             onDelete={handleDeleteNote}
             onToggleFavorite={handleToggleFavorite}
