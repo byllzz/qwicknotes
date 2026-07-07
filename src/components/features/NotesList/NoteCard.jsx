@@ -1,6 +1,6 @@
+import React from 'react';
 import { Star, Clock, Pencil, Trash2 } from 'lucide-react';
 
-// Helper to match screenshot date format exactly: M/D/YYYY at HH:MM AM/PM
 const formatDateTime = dateString => {
   const date = new Date(dateString);
   const month = date.getMonth() + 1;
@@ -14,12 +14,20 @@ const formatDateTime = dateString => {
 };
 
 const NoteCard = ({ note, onClick, onEdit, onDelete }) => {
+  // Calculate size
+  const charSize = note.content.length;
+  const sizeLabel = charSize === 0 ? 'Empty' : `${charSize} chars`;
+
+  // Determine which timestamp to show
+  const displayDate =
+    note.updatedAt && note.updatedAt !== note.createdAt ? note.updatedAt : note.createdAt;
+  const dateLabel = note.updatedAt && note.updatedAt !== note.createdAt ? 'Updated' : 'Created';
+
   return (
     <div
-      onClick={() => onClick(note)}
+      onClick={() => onClick && onClick(note)}
       className="group bg-white rounded-xl shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] border border-gray-200 p-4 hover:shadow-md cursor-pointer transition-all flex flex-col justify-between gap-2"
     >
-      {/* Top: Star Icon, Title, & Text */}
       <div className="flex items-start gap-3">
         <Star className="text-gray-300 mt-1 shrink-0" size={16} />
         <div className="flex-1 min-w-0">
@@ -28,10 +36,9 @@ const NoteCard = ({ note, onClick, onEdit, onDelete }) => {
         </div>
       </div>
 
-      {/* Bottom: Date & Action Buttons */}
       <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-50">
         <div className="flex items-center gap-1.5 text-[10px] text-gray-400 font-medium">
-          <Clock size={12} /> {formatDateTime(note.createdAt)}
+          <Clock size={12} /> {dateLabel} {formatDateTime(displayDate)}
         </div>
         <div
           className="flex items-center gap-3 text-[10px] font-medium"
@@ -43,6 +50,10 @@ const NoteCard = ({ note, onClick, onEdit, onDelete }) => {
           >
             <Pencil size={11} /> Edit
           </button>
+
+          {/* NEW: Note Size Span */}
+          <span className="text-gray-300 font-normal text-[10px]">{sizeLabel}</span>
+
           <button
             onClick={() => onDelete(note.id)}
             className="text-red-400 hover:text-red-600 flex items-center gap-1"

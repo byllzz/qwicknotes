@@ -1,16 +1,42 @@
-import { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Star, ArrowDownUp, Download, FileText } from 'lucide-react';
 import NoteCard from './NoteCard';
-import NoteModal from './NoteModal';
 
-const NotesList = ({ notes, onEdit, onDelete }) => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedNote, setSelectedNote] = useState(null);
+const sortOptions = [
+  'Newest First',
+  'Oldest First',
+  'Recently Updated',
+  'Largest Size',
+  'Smallest Size',
+  'Title A-Z',
+  'Title Z-A',
+];
 
-  const handleCardClick = note => {
-    setSelectedNote(note);
-    setIsModalOpen(true);
-  };
+const NotesList = ({
+  notes,
+  rawNotes,
+  searchQuery,
+  sortOption,
+  setSortOption,
+  onEdit,
+  onDelete,
+}) => {
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  // Close dropdown if clicked outside
+  useEffect(() => {
+    const handleClickOutside = event => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Check if it's a search with 0 results
+  const isSearchingEmpty = searchQuery.trim() !== '' && notes.length === 0;
 
   return (
     <div className="h-full flex flex-col">
@@ -18,13 +44,39 @@ const NotesList = ({ notes, onEdit, onDelete }) => {
         <span className="text-gray-500 text-sm font-medium tracking-wider">
           NOTES ({notes.length})
         </span>
+
         <div className="flex items-center gap-4 text-sm text-gray-500">
           <button className="hover:text-gray-800">
             <Star size={18} />
           </button>
-          <button className="flex items-center gap-1 hover:text-gray-800">
-            Newest First <ArrowDownUp size={14} />
-          </button>
+
+          {/* Dropdown Trigger & Menu */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="flex items-center gap-1 hover:text-gray-800 bg-transparent py-1 px-2 rounded focus:outline-none"
+            >
+              {sortOption} <ArrowDownUp size={14} />
+            </button>
+
+            {isDropdownOpen && (
+              <div className="absolute right-0 top-8 mt-1 w-40 bg-white border border-gray-100 rounded-lg shadow-xl z-10 py-1 overflow-hidden">
+                {sortOptions.map(option => (
+                  <button
+                    key={option}
+                    onClick={() => {
+                      setSortOption(option);
+                      setIsDropdownOpen(false);
+                    }}
+                    className={`block w-full text-left px-4 py-2 text-xs hover:bg-gray-50 transition-colors ${sortOption === option ? 'text-black font-semibold bg-gray-50' : 'text-gray-600'}`}
+                  >
+                    {option}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
           <button className="flex items-center gap-1 hover:text-gray-800">
             <Download size={16} /> Export
           </button>
@@ -38,7 +90,16 @@ const NotesList = ({ notes, onEdit, onDelete }) => {
               <FileText size={40} className="text-gray-300" />
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-6 border-2 border-gray-200 bg-white"></div>
             </div>
-            <p className="text-gray-400 font-medium">No notes yet. Start writing!</p>
+
+            {/* Conditionally render based on search state */}
+            {isSearchingEmpty ? (
+              <>
+                <p className="text-gray-400 font-medium text-base">No matching notes found</p>
+                <p className="text-gray-400 text-xs mt-1">Try adjusting your search terms</p>
+              </>
+            ) : (
+              <p className="text-gray-400 font-medium">No notes yet. Start writing!</p>
+            )}
           </div>
         ) : (
           <div className="flex flex-col gap-4">
@@ -46,7 +107,7 @@ const NotesList = ({ notes, onEdit, onDelete }) => {
               <NoteCard
                 key={note.id}
                 note={note}
-                onClick={handleCardClick}
+                onClick={() => {}} // We don't use this here anymore, we use actions
                 onEdit={onEdit}
                 onDelete={onDelete}
               />
@@ -54,15 +115,6 @@ const NotesList = ({ notes, onEdit, onDelete }) => {
           </div>
         )}
       </div>
-
-      {/* Render the Detail Modal */}
-      <NoteModal
-        note={selectedNote}
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onEdit={onEdit}
-        onDelete={onDelete}
-      />
     </div>
   );
 };
