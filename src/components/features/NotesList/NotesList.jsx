@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Star, ArrowDownUp, Download, FileText, Tags, Plus, X } from 'lucide-react';
+import { Star, ArrowDownUp, Download, FileText, Tags } from 'lucide-react';
 import NoteCard from './NoteCard';
 import NoteModal from './NoteModal';
 
@@ -24,11 +24,6 @@ const NotesList = ({
   filterTag,
   setFilterTag,
   allTags,
-  isCreatingTag,
-  setIsCreatingTag,
-  newTagName,
-  setNewTagName,
-  handleCreateTag,
   currentEditingId,
   onEdit,
   onDelete,
@@ -48,7 +43,6 @@ const NotesList = ({
     setIsModalOpen(true);
   };
 
-  // Handle clicks outside for both dropdowns
   useEffect(() => {
     const handleClickOutside = event => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -63,8 +57,6 @@ const NotesList = ({
   }, []);
 
   const isSearchingEmpty = searchQuery.trim() !== '' && notes.length === 0;
-
-  // Get unique tags actually used in saved notes for the filter dropdown
   const usedTags = [...new Set(rawNotes.flatMap(n => n.tags || []))];
 
   return (
@@ -142,48 +134,6 @@ const NotesList = ({
                     {option}
                   </button>
                 ))}
-              </div>
-            )}
-          </div>
-
-          {/* Create Tag Button & Popup */}
-          <div className="relative">
-            <button
-              onClick={() => setIsCreatingTag(!isCreatingTag)}
-              className="flex items-center gap-1 hover:text-gray-800 border border-dashed border-gray-300 px-2 py-1 rounded hover:bg-gray-50 transition-colors"
-            >
-              <Plus size={14} /> <span className="text-xs">Create tag</span>
-            </button>
-
-            {isCreatingTag && (
-              <div className="absolute right-0 top-8 mt-1 w-48 bg-white border border-gray-100 rounded-lg shadow-xl z-10 p-3 flex flex-col gap-2 animate-in fade-in zoom-in-95 duration-100">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-gray-700">New Tag</span>
-                  <button
-                    onClick={() => {
-                      setIsCreatingTag(false);
-                      setNewTagName('');
-                    }}
-                    className="text-gray-400 hover:text-gray-600"
-                  >
-                    <X size={14} />
-                  </button>
-                </div>
-                <input
-                  autoFocus
-                  type="text"
-                  value={newTagName}
-                  onChange={e => setNewTagName(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleCreateTag()}
-                  placeholder="Tag name..."
-                  className="w-full px-2 py-1.5 text-sm border border-gray-200 rounded focus:outline-none focus:border-black"
-                />
-                <button
-                  onClick={handleCreateTag}
-                  className="w-full py-1.5 bg-black text-white text-xs font-medium rounded hover:bg-gray-800 transition-colors"
-                >
-                  Create Tag
-                </button>
               </div>
             )}
           </div>

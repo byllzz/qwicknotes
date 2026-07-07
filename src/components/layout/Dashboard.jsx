@@ -12,7 +12,7 @@ const initialDraft = {
   bgColor: '',
   textColor: '#1f2937',
   editorFavorite: false,
-  tags: [], // Added tags to the draft
+  tags: [],
 };
 
 const Dashboard = () => {
@@ -24,7 +24,6 @@ const Dashboard = () => {
   const [allTags, setAllTags] = useLocalStorage('qwicknotes_all_tags', ['Work', 'Personal']);
   const [editorDraft, setEditorDraft] = useLocalStorage('qwicknotes_editor_draft', initialDraft);
 
-  // FIXED: Added fallback default array `= []` to prevent undefined tags
   const { title, content, bgColor, textColor, editorFavorite, tags = [] } = editorDraft;
 
   const setTitle = val => setEditorDraft(prev => ({ ...prev, title: val }));
@@ -39,6 +38,7 @@ const Dashboard = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [noteToDelete, setNoteToDelete] = useState(null);
 
+  // Moved Tag Creation State here
   const [isCreatingTag, setIsCreatingTag] = useState(false);
   const [newTagName, setNewTagName] = useState('');
 
@@ -62,6 +62,16 @@ const Dashboard = () => {
       }
     }
   }, []);
+
+  // Handle Create Tag logic
+  const handleCreateTag = () => {
+    const trimmed = newTagName.trim();
+    if (trimmed && !allTags.includes(trimmed)) {
+      setAllTags([trimmed, ...allTags]);
+    }
+    setNewTagName('');
+    setIsCreatingTag(false);
+  };
 
   const filteredNotes = notes.filter(note => {
     const matchesSearch =
@@ -99,15 +109,6 @@ const Dashboard = () => {
   };
 
   const displayNotes = applySort(filteredNotes, sortOption);
-
-  const handleCreateTag = () => {
-    const trimmed = newTagName.trim();
-    if (trimmed && !allTags.includes(trimmed)) {
-      setAllTags([trimmed, ...allTags]);
-    }
-    setNewTagName('');
-    setIsCreatingTag(false);
-  };
 
   const handleSaveNote = () => {
     if (!title.trim() && !content.trim()) return;
@@ -222,7 +223,12 @@ const Dashboard = () => {
             tags={tags}
             setTags={setEditorTags}
             allTags={allTags}
+            // Pass the Tag creation props down to the Editor
             isCreatingTag={isCreatingTag}
+            setIsCreatingTag={setIsCreatingTag}
+            newTagName={newTagName}
+            setNewTagName={setNewTagName}
+            handleCreateTag={handleCreateTag}
             onSave={handleSaveNote}
             isTyping={isTyping}
             isEditing={!!editingId}
@@ -242,11 +248,6 @@ const Dashboard = () => {
             filterTag={filterTag}
             setFilterTag={setFilterTag}
             allTags={allTags}
-            isCreatingTag={isCreatingTag}
-            setIsCreatingTag={setIsCreatingTag}
-            newTagName={newTagName}
-            setNewTagName={setNewTagName}
-            handleCreateTag={handleCreateTag}
             currentEditingId={editingId}
             onEdit={handleEditNote}
             onDelete={handleDeleteNote}
