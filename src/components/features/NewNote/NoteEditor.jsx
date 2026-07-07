@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Underline from '@tiptap/extension-underline';
@@ -92,9 +92,11 @@ const NoteEditor = ({
   const [isManageTagsOpen, setIsManageTagsOpen] = useState(false);
   const manageTagsRef = useRef(null);
 
-  // FIXED: Removed TextStyle and TextAlign to avoid Vite ESM syntax error
+  // FIXED: Memoize extensions to prevent duplicate extension warnings
+  const extensions = useMemo(() => [StarterKit, Underline], []);
+
   const editor = useEditor({
-    extensions: [StarterKit, Underline],
+    extensions,
     content: content,
     onUpdate: ({ editor }) => {
       const html = editor.getHTML();

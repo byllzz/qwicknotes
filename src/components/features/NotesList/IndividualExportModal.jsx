@@ -5,8 +5,10 @@ import { downloadText, downloadMarkdown, downloadPDF } from '../../../utils/expo
 const stripHtml = html => (html ? html.replace(/<[^>]*>/g, '') : '');
 
 const IndividualExportModal = ({ isOpen, onClose, notes }) => {
+  // ⚠️ HOOKS MUST ALWAYS BE DECLARED AT THE TOP, even before the early return!
   const [activeTab, setActiveTab] = useState('all');
   const [exportingId, setExportingId] = useState(null);
+  const [selectedTag, setSelectedTag] = useState(null);
 
   if (!isOpen) return null;
 
@@ -15,13 +17,11 @@ const IndividualExportModal = ({ isOpen, onClose, notes }) => {
     if (activeTab === 'all') return true;
     if (activeTab === 'fav') return n.isFavorite === true;
     if (activeTab === 'edited') return n.updatedAt && n.updatedAt !== n.createdAt;
-    if (activeTab === 'tags') return true; // Handled specially below
+    if (activeTab === 'tags') return true;
     return true;
   });
 
-  // Unique tags list for the Tags tab
   const uniqueTags = [...new Set(notes.flatMap(n => n.tags || []))].sort();
-  const [selectedTag, setSelectedTag] = useState(null);
 
   const getNotesForTag = tag => {
     if (!tag) return [];
@@ -95,7 +95,6 @@ const IndividualExportModal = ({ isOpen, onClose, notes }) => {
 
         {/* Modal Content */}
         <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
-          {/* TAGS TAB SPECIAL RENDERING */}
           {activeTab === 'tags' ? (
             <div className="flex flex-col h-full">
               <div className="flex flex-wrap gap-2 mb-6">
@@ -136,7 +135,6 @@ const IndividualExportModal = ({ isOpen, onClose, notes }) => {
               </div>
             </div>
           ) : (
-            /* STANDARD TABS (ALL, FAV, EDITED) */
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {filteredNotes.length === 0 ? (
                 <div className="col-span-full flex flex-col items-center justify-center text-gray-400 mt-10">
@@ -163,7 +161,6 @@ const IndividualExportModal = ({ isOpen, onClose, notes }) => {
 
 // Sub-component for the Export Note Card inside the Modal
 const ExportNoteCard = ({ note, onExport, exportingId, setExportingId }) => {
-  const isExporting = exportingId === note.id;
   const [showFormatDrop, setShowFormatDrop] = useState(false);
 
   return (

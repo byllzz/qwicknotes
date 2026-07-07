@@ -84,11 +84,16 @@ const NotesList = ({
             <Trash2 size={16} /> Delete All
           </button>
 
-          {/* Export Button with Dropdown */}
+          {/* Export Button with Disabled State */}
           <div className="relative">
             <button
-              onClick={() => setIsExportOpen(!isExportOpen)}
-              className="flex items-center gap-1 hover:text-gray-800 transition-colors"
+              onClick={() => notes.length > 0 && setIsExportOpen(!isExportOpen)} // <--- Prevent click if disabled
+              className={`flex items-center gap-1 transition-colors ${
+                notes.length === 0
+                  ? 'opacity-50 cursor-not-allowed text-gray-400'
+                  : 'hover:text-gray-800 text-gray-500'
+              }`}
+              disabled={notes.length === 0}
             >
               <Download size={16} /> Export
             </button>
@@ -223,7 +228,6 @@ const NotesList = ({
         }}
       />
 
-      {/* NEW: Individual Export Modal */}
       <IndividualExportModal
         isOpen={isIndividualExportOpen}
         onClose={() => setIsIndividualExportOpen(false)}
