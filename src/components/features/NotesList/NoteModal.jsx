@@ -24,12 +24,8 @@ const NoteModal = ({ note, isOpen, onClose, onEdit, onDelete }) => {
       <div
         className="rounded-2xl shadow-2xl w-full max-w-lg flex flex-col overflow-hidden"
         onClick={e => e.stopPropagation()}
-        style={{
-          backgroundColor: note.bgColor || '#ffffff',
-          color: note.textColor || '#1f2937',
-        }}
+        style={{ backgroundColor: note.bgColor || '#ffffff', color: note.textColor || '#1f2937' }}
       >
-        {/* Header */}
         <div className="px-6 pt-6 pb-2 relative">
           <button
             onClick={onClose}
@@ -43,14 +39,12 @@ const NoteModal = ({ note, isOpen, onClose, onEdit, onDelete }) => {
           </div>
         </div>
 
-        {/* Body */}
+        {/* RENDER FORMATTED HTML IN MODAL */}
         <div
-          className={`px-6 py-5 text-sm leading-relaxed whitespace-pre-wrap border-y ${note.textColor ? 'border-black/10' : 'border-gray-100'} flex-1 max-h-[300px] overflow-y-auto`}
-        >
-          {note.content}
-        </div>
+          className={`px-6 py-5 text-sm leading-relaxed border-y ${note.textColor ? 'border-black/10' : 'border-gray-100'} flex-1 max-h-[300px] overflow-y-auto prose prose-sm max-w-none`}
+          dangerouslySetInnerHTML={{ __html: note.content }}
+        />
 
-        {/* Footer */}
         <div
           className={`px-6 py-4 flex justify-between items-center border-t ${note.textColor ? 'border-black/10' : 'border-gray-100'}`}
         >

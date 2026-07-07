@@ -1,14 +1,17 @@
 import React from 'react';
 import { Clock, Trash2 } from 'lucide-react';
 
+const stripHtml = html => (html ? html.replace(/<[^>]*>/g, '') : '');
+
 const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, note }) => {
   if (!isOpen || !note) return null;
 
-  const charSize = note.content.length;
+  const charSize = stripHtml(note.content).length;
   const sizeLabel = charSize === 0 ? 'Empty' : `${charSize} chars`;
-  // Truncate description to 40 characters
   const previewContent =
-    note.content.length > 40 ? note.content.substring(0, 40) + '...' : note.content;
+    stripHtml(note.content).length > 40
+      ? stripHtml(note.content).substring(0, 40) + '...'
+      : note.content;
   const isEdited = note.updatedAt && note.updatedAt !== note.createdAt;
 
   return (
@@ -27,12 +30,10 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, note }) => {
             </div>
             <h3 className="text-xl font-semibold text-gray-900">Delete Note?</h3>
           </div>
-
           <p className="text-sm text-gray-500 mb-6">
             You are about to permanently delete this note. This action cannot be undone.
           </p>
 
-          {/* Preview of the Card you are about to delete */}
           <div
             className="rounded-lg p-4 border border-gray-200 mb-6 shadow-sm"
             style={{
@@ -41,12 +42,14 @@ const DeleteConfirmationModal = ({ isOpen, onClose, onConfirm, note }) => {
             }}
           >
             <h4 className="font-medium text-base mb-1 truncate">{note.title}</h4>
-            {note.content ? (
-              <p className="text-sm opacity-90 leading-relaxed">{previewContent}</p>
+            {stripHtml(note.content).trim() ? (
+              <div
+                className="text-sm opacity-90 leading-relaxed prose prose-sm max-w-none"
+                dangerouslySetInnerHTML={{ __html: previewContent }}
+              />
             ) : (
               <p className="text-sm italic opacity-70">No description provided.</p>
             )}
-            {/* Footer of Preview Card */}
             <div
               className={`mt-3 pt-3 border-t ${note.textColor ? 'border-black/10' : 'border-gray-200'} flex justify-between items-center text-[10px] opacity-80`}
             >

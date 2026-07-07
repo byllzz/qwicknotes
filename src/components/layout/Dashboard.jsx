@@ -41,7 +41,9 @@ const Dashboard = () => {
   const [isCreatingTag, setIsCreatingTag] = useState(false);
   const [newTagName, setNewTagName] = useState('');
 
-  const isTyping = title.trim() !== '' || content.trim() !== '';
+  // Helper to strip HTML for typing check
+  const stripHtml = html => (html ? html.replace(/<[^>]*>/g, '') : '');
+  const isTyping = title.trim() !== '' || stripHtml(content).trim() !== '';
 
   useEffect(() => {
     if (editingId) {
@@ -71,41 +73,26 @@ const Dashboard = () => {
     setIsCreatingTag(false);
   };
 
-  // Delete a single tag globally
   const handleDeleteGlobalTag = tagToDelete => {
-    // 1. Remove from the global list
     setAllTags(prev => prev.filter(t => t !== tagToDelete));
-    // 2. Remove from all existing saved notes
     setNotes(prevNotes =>
-      prevNotes.map(n => ({
-        ...n,
-        tags: n.tags ? n.tags.filter(t => t !== tagToDelete) : [],
-      })),
+      prevNotes.map(n => ({ ...n, tags: n.tags ? n.tags.filter(t => t !== tagToDelete) : [] })),
     );
-    // 3. Remove from the active editor draft if currently selected
-    if (tags.includes(tagToDelete)) {
-      setEditorTags(tags.filter(t => t !== tagToDelete));
-    }
-    // 4. Clear the tag filter if it was filtering on this deleted tag
+    if (tags.includes(tagToDelete)) setEditorTags(tags.filter(t => t !== tagToDelete));
     if (filterTag === tagToDelete) setFilterTag(null);
   };
 
-  // Delete all tags globally
   const handleDeleteAllGlobalTags = () => {
-    // 1. Clear the global list
     setAllTags([]);
-    // 2. Clear tags from all existing saved notes
     setNotes(prevNotes => prevNotes.map(n => ({ ...n, tags: [] })));
-    // 3. Clear tags from the active editor draft
     setEditorTags([]);
-    // 4. Clear the tag filter
     setFilterTag(null);
   };
 
   const filteredNotes = notes.filter(note => {
     const matchesSearch =
       note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      note.content.toLowerCase().includes(searchQuery.toLowerCase());
+      stripHtml(note.content).toLowerCase().includes(searchQuery.toLowerCase());
 
     if (showFavoritesOnly && !note.isFavorite) return false;
     if (filterTag && !(note.tags && note.tags.includes(filterTag))) return false;
@@ -125,9 +112,9 @@ const Dashboard = () => {
           (a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt),
         );
       case 'Largest Size':
-        return sortedList.sort((a, b) => b.content.length - a.content.length);
+        return sortedList.sort((a, b) => stripHtml(b.content).length - stripHtml(a.content).length);
       case 'Smallest Size':
-        return sortedList.sort((a, b) => a.content.length - b.content.length);
+        return sortedList.sort((a, b) => stripHtml(a.content).length - stripHtml(b.content).length);
       case 'Title A-Z':
         return sortedList.sort((a, b) => a.title.localeCompare(b.title));
       case 'Title Z-A':
@@ -140,8 +127,8 @@ const Dashboard = () => {
   const displayNotes = applySort(filteredNotes, sortOption);
 
   const handleSaveNote = () => {
-    if (!title.trim() && !content.trim()) return;
-    if (title.trim() && !content.trim()) {
+    if (!title.trim() && !stripHtml(content).trim()) return;
+    if (title.trim() && !stripHtml(content).trim()) {
       setIsModalOpen(true);
       return;
     }
@@ -196,11 +183,10 @@ const Dashboard = () => {
     setEditingId(note.id);
   };
 
-  const handleToggleFavorite = id => {
+  const handleToggleFavorite = id =>
     setNotes(prevNotes =>
       prevNotes.map(n => (n.id === id ? { ...n, isFavorite: !n.isFavorite } : n)),
     );
-  };
 
   const handleDeleteNote = id => {
     setNoteToDelete(id);
@@ -257,8 +243,8 @@ const Dashboard = () => {
             newTagName={newTagName}
             setNewTagName={setNewTagName}
             handleCreateTag={handleCreateTag}
-            onDeleteTag={handleDeleteGlobalTag} // Pass delete single
-            onDeleteAllTags={handleDeleteAllGlobalTags} // Pass delete all
+            onDeleteTag={handleDeleteGlobalTag}
+            onDeleteAllTags={handleDeleteAllGlobalTags}
             onSave={handleSaveNote}
             isTyping={isTyping}
             isEditing={!!editingId}
@@ -293,7 +279,6 @@ const Dashboard = () => {
         title="Empty Description"
         message="You haven't added any content. Proceed with a default description?"
       />
-
       <DeleteConfirmationModal
         isOpen={isDeleteModalOpen}
         note={notes.find(n => n.id === noteToDelete)}

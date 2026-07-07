@@ -12,8 +12,11 @@ const formatDateTime = dateString => {
   return `${month}/${day}/${year} at ${hours}:${minutes} ${ampm}`;
 };
 
+// Helper to strip HTML for size calculation
+const stripHtml = html => (html ? html.replace(/<[^>]*>/g, '') : '');
+
 const NoteCard = ({ note, onCardClick, onEdit, onDelete, onToggleFavorite, currentEditingId }) => {
-  const charSize = note.content.length;
+  const charSize = stripHtml(note.content).length;
   const sizeLabel = charSize === 0 ? 'Empty' : `${charSize} chars`;
 
   const displayDate =
@@ -28,10 +31,7 @@ const NoteCard = ({ note, onCardClick, onEdit, onDelete, onToggleFavorite, curre
         if (!isEditingThisCard) onCardClick(note);
       }}
       className={`group bg-white rounded-xl shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] border border-gray-200 p-4 hover:shadow-md cursor-pointer transition-all flex flex-col justify-between gap-2 ${isEditingThisCard ? 'opacity-60' : ''}`}
-      style={{
-        backgroundColor: note.bgColor || '#ffffff',
-        color: note.textColor || '#1f2937',
-      }}
+      style={{ backgroundColor: note.bgColor || '#ffffff', color: note.textColor || '#1f2937' }}
       title={isEditingThisCard ? 'Currently being edited in the left panel' : ''}
     >
       <div className="flex items-start gap-3">
@@ -48,7 +48,6 @@ const NoteCard = ({ note, onCardClick, onEdit, onDelete, onToggleFavorite, curre
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
             <h4 className="text-base font-medium truncate">{note.title}</h4>
-            {/* Tags display on Top Right of card */}
             {note.tags && note.tags.length > 0 && (
               <div className="flex flex-wrap gap-1 justify-end shrink-0">
                 {note.tags.slice(0, 2).map(tag => (
@@ -71,7 +70,11 @@ const NoteCard = ({ note, onCardClick, onEdit, onDelete, onToggleFavorite, curre
               </div>
             )}
           </div>
-          <p className="text-sm opacity-80 line-clamp-2 mt-1">{note.content}</p>
+          {/* RENDER FORMATTED HTML */}
+          <div
+            className="text-sm opacity-80 line-clamp-2 mt-1 prose prose-sm max-w-none"
+            dangerouslySetInnerHTML={{ __html: note.content }}
+          />
         </div>
       </div>
 
@@ -94,9 +97,7 @@ const NoteCard = ({ note, onCardClick, onEdit, onDelete, onToggleFavorite, curre
           >
             <Pencil size={11} /> Edit
           </button>
-
           <span className="opacity-50 font-normal text-[10px]">{sizeLabel}</span>
-
           <button
             onClick={() => {
               if (!isEditingThisCard) onDelete(note.id);

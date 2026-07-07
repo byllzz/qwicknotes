@@ -1,9 +1,12 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
+import Underline from '@tiptap/extension-underline';
 import {
   Star,
   Bold,
   Italic,
-  Underline,
+  Underline as UnderlineIcon,
   Heading1,
   Heading2,
   Heading3,
@@ -77,7 +80,7 @@ const NoteEditor = ({
   setNewTagName,
   handleCreateTag,
   onDeleteTag,
-  onDeleteAllTags, // New Props
+  onDeleteAllTags,
   onSave,
   isTyping,
   isEditing,
@@ -86,23 +89,43 @@ const NoteEditor = ({
 }) => {
   const [showPicker, setShowPicker] = useState(false);
   const pickerRef = useRef(null);
-
   const [isManageTagsOpen, setIsManageTagsOpen] = useState(false);
   const manageTagsRef = useRef(null);
 
+  // FIXED: Removed TextStyle and TextAlign to avoid Vite ESM syntax error
+  const editor = useEditor({
+    extensions: [StarterKit, Underline],
+    content: content,
+    onUpdate: ({ editor }) => {
+      const html = editor.getHTML();
+      setContent(html);
+    },
+    editorProps: {
+      attributes: {
+        class:
+          'prose prose-sm max-w-none outline-none min-h-[150px] text-gray-700 placeholder-gray-400',
+      },
+    },
+  });
+
+  // Sync editor content when the `content` prop changes from outside
+  useEffect(() => {
+    if (editor && content !== editor.getHTML()) {
+      editor.commands.setContent(content);
+    }
+  }, [content, editor]);
+
   useEffect(() => {
     const handleClickOutside = event => {
-      if (pickerRef.current && !pickerRef.current.contains(event.target)) {
-        setShowPicker(false);
-      }
-      if (manageTagsRef.current && !manageTagsRef.current.contains(event.target)) {
+      if (pickerRef.current && !pickerRef.current.contains(event.target)) setShowPicker(false);
+      if (manageTagsRef.current && !manageTagsRef.current.contains(event.target))
         setIsManageTagsOpen(false);
-      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // --- Handlers ---
   const handleSelectBG = value => {
     setBgColor(value);
     setShowPicker(false);
@@ -123,12 +146,12 @@ const NoteEditor = ({
 
   const toggleTag = tag => {
     if (isCreatingTag) return;
-    if (tags.includes(tag)) {
-      setTags(tags.filter(t => t !== tag));
-    } else {
-      setTags([...tags, tag]);
-    }
+    if (tags.includes(tag)) setTags(tags.filter(t => t !== tag));
+    else setTags([...tags, tag]);
   };
+
+  // If editor isn't ready yet, return null
+  if (!editor) return null;
 
   return (
     <div
@@ -163,23 +186,15 @@ const NoteEditor = ({
         className={`w-full text-lg font-medium text-gray-800 placeholder-gray-300 bg-transparent border-b pb-2 mb-6 focus:outline-none focus:border-gray-400 transition-colors ${isEditing ? 'border-blue-400' : 'border-gray-200'}`}
       />
 
-      {/* Tags Section with Management */}
+      {/* Tags Section */}
       <div className="mb-4 relative" ref={manageTagsRef}>
         <span className="text-xs text-gray-500 font-medium block mb-1.5">Tags</span>
         <div className="flex flex-wrap gap-1.5 items-center pr-8">
-          {' '}
-          {/* Added pr-8 for space */}
           {allTags.map(tag => (
             <button
               key={tag}
               onClick={() => toggleTag(tag)}
-              className={`px-2.5 py-1 rounded-full text-[10px] font-medium transition-all ${
-                isCreatingTag
-                  ? 'opacity-50 cursor-not-allowed pointer-events-none'
-                  : tags.includes(tag)
-                    ? 'bg-black text-white border border-black'
-                    : 'bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-200'
-              }`}
+              className={`px-2.5 py-1 rounded-full text-[10px] font-medium transition-all ${isCreatingTag ? 'opacity-50 cursor-not-allowed pointer-events-none' : tags.includes(tag) ? 'bg-black text-white border border-black' : 'bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-200'}`}
             >
               {tag}
             </button>
@@ -191,8 +206,6 @@ const NoteEditor = ({
             <Plus size={14} /> Add
           </button>
         </div>
-
-        {/* Manage Tags Trigger (Trash Icon) */}
         <button
           onClick={() => setIsManageTagsOpen(!isManageTagsOpen)}
           className="absolute right-0 top-0 text-gray-400 hover:text-red-500 transition-colors mt-1"
@@ -200,7 +213,6 @@ const NoteEditor = ({
           <Trash2 size={16} />
         </button>
 
-        {/* Create Tag Popup */}
         {isCreatingTag && (
           <div className="absolute top-full left-0 mt-2 z-20 bg-white border border-gray-200 rounded-lg shadow-lg p-3 w-48 animate-in fade-in zoom-in-95 duration-100">
             <div className="flex items-center justify-between mb-1.5">
@@ -233,7 +245,6 @@ const NoteEditor = ({
           </div>
         )}
 
-        {/* Manage Tags Popup */}
         {isManageTagsOpen && (
           <div className="absolute right-0 top-full mt-2 z-20 bg-white border border-gray-200 rounded-lg shadow-lg p-3 w-56 animate-in fade-in zoom-in-95 duration-100">
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
@@ -304,7 +315,6 @@ const NoteEditor = ({
           </span>
           <ChevronDown size={14} className="text-gray-400 ml-1" />
         </button>
-
         {showPicker && (
           <div className="absolute top-12 left-0 z-20 bg-white border border-gray-200 rounded-xl shadow-xl p-3 w-[340px] flex flex-row gap-3 items-start animate-in fade-in zoom-in-95 duration-100">
             <div className="flex flex-col items-center flex-1 gap-1.5">
@@ -377,48 +387,79 @@ const NoteEditor = ({
         )}
       </div>
 
-      <div className="bg-gray-50 rounded-lg p-1.5 flex flex-wrap gap-1 mb-4">
-        <button className="p-1.5 hover:bg-gray-200 rounded text-gray-600 transition-colors">
+      {/* RICH TEXT TOOLBAR & EDITOR */}
+      <div className="bg-gray-50 rounded-lg p-1.5 flex flex-wrap gap-1 mb-3">
+        <button
+          onClick={() => editor.chain().focus().toggleBold().run()}
+          className={`p-1.5 rounded text-gray-600 transition-colors ${editor.isActive('bold') ? 'bg-gray-200 text-black' : 'hover:bg-gray-200'}`}
+        >
           <Bold size={16} />
         </button>
-        <button className="p-1.5 hover:bg-gray-200 rounded text-gray-600 transition-colors">
+        <button
+          onClick={() => editor.chain().focus().toggleItalic().run()}
+          className={`p-1.5 rounded text-gray-600 transition-colors ${editor.isActive('italic') ? 'bg-gray-200 text-black' : 'hover:bg-gray-200'}`}
+        >
           <Italic size={16} />
         </button>
-        <button className="p-1.5 hover:bg-gray-200 rounded text-gray-600 transition-colors">
-          <Underline size={16} />
+        <button
+          onClick={() => editor.chain().focus().toggleUnderline().run()}
+          className={`p-1.5 rounded text-gray-600 transition-colors ${editor.isActive('underline') ? 'bg-gray-200 text-black' : 'hover:bg-gray-200'}`}
+        >
+          <UnderlineIcon size={16} />
         </button>
         <div className="w-px h-6 bg-gray-300 mx-1 self-center"></div>
-        <button className="p-1.5 hover:bg-gray-200 rounded text-gray-600 transition-colors">
+        <button
+          onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+          className={`p-1.5 rounded text-gray-600 transition-colors ${editor.isActive('heading', { level: 1 }) ? 'bg-gray-200 text-black' : 'hover:bg-gray-200'}`}
+        >
           <Heading1 size={16} />
         </button>
-        <button className="p-1.5 hover:bg-gray-200 rounded text-gray-600 transition-colors">
+        <button
+          onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+          className={`p-1.5 rounded text-gray-600 transition-colors ${editor.isActive('heading', { level: 2 }) ? 'bg-gray-200 text-black' : 'hover:bg-gray-200'}`}
+        >
           <Heading2 size={16} />
         </button>
-        <button className="p-1.5 hover:bg-gray-200 rounded text-gray-600 transition-colors">
+        <button
+          onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+          className={`p-1.5 rounded text-gray-600 transition-colors ${editor.isActive('heading', { level: 3 }) ? 'bg-gray-200 text-black' : 'hover:bg-gray-200'}`}
+        >
           <Heading3 size={16} />
         </button>
         <div className="w-px h-6 bg-gray-300 mx-1 self-center"></div>
-        <button className="p-1.5 hover:bg-gray-200 rounded text-gray-600 transition-colors">
+        <button
+          onClick={() => editor.chain().focus().toggleBulletList().run()}
+          className={`p-1.5 rounded text-gray-600 transition-colors ${editor.isActive('bulletList') ? 'bg-gray-200 text-black' : 'hover:bg-gray-200'}`}
+        >
           <List size={16} />
         </button>
-        <button className="p-1.5 hover:bg-gray-200 rounded text-gray-600 transition-colors">
+        <button
+          onClick={() => editor.chain().focus().toggleBlockquote().run()}
+          className={`p-1.5 rounded text-gray-600 transition-colors ${editor.isActive('blockquote') ? 'bg-gray-200 text-black' : 'hover:bg-gray-200'}`}
+        >
           <Quote size={16} />
         </button>
         <div className="w-px h-6 bg-gray-300 mx-1 self-center"></div>
-        <button className="p-1.5 hover:bg-gray-200 rounded text-gray-600 transition-colors">
+        <button
+          onClick={() => editor.chain().focus().undo().run()}
+          disabled={!editor.can().undo()}
+          className={`p-1.5 rounded text-gray-600 transition-colors ${!editor.can().undo() ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-200'}`}
+        >
           <Undo size={16} />
         </button>
-        <button className="p-1.5 hover:bg-gray-200 rounded text-gray-600 transition-colors">
+        <button
+          onClick={() => editor.chain().focus().redo().run()}
+          disabled={!editor.can().redo()}
+          className={`p-1.5 rounded text-gray-600 transition-colors ${!editor.can().redo() ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-200'}`}
+        >
           <Redo size={16} />
         </button>
       </div>
 
-      <textarea
-        value={content}
-        onChange={e => setContent(e.target.value)}
-        placeholder="Start writing..."
-        className={`flex-1 w-full bg-transparent text-gray-700 placeholder-gray-400 resize-none focus:outline-none min-h-[150px] ${isEditing ? 'bg-blue-50/30 p-2 rounded' : ''}`}
-      />
+      {/* THE ACTUAL EDITOR AREA */}
+      <div className="flex-1 border border-gray-100 rounded-lg p-3 overflow-y-auto bg-white">
+        <EditorContent editor={editor} />
+      </div>
 
       <button
         onClick={onSave}
