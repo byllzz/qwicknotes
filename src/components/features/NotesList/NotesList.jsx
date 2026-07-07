@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Star, ArrowDownUp, Download, FileText, Tags } from 'lucide-react';
+import { Star, ArrowDownUp, Download, FileText, Tags, Trash2 } from 'lucide-react';
 import NoteCard from './NoteCard';
 import NoteModal from './NoteModal';
+import DeleteAllNotesModal from '../../common/DeleteAllNotesModal'; // Import new modal
 
 const sortOptions = [
   'Newest First',
@@ -28,6 +29,7 @@ const NotesList = ({
   onEdit,
   onDelete,
   onToggleFavorite,
+  onDeleteAllNotes, // <--- Receive the function
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -38,6 +40,9 @@ const NotesList = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedNote, setSelectedNote] = useState(null);
 
+  // State for the Delete All Modal
+  const [isDeleteAllOpen, setIsDeleteAllOpen] = useState(false);
+
   const handleCardClick = note => {
     setSelectedNote(note);
     setIsModalOpen(true);
@@ -45,12 +50,10 @@ const NotesList = ({
 
   useEffect(() => {
     const handleClickOutside = event => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target))
         setIsDropdownOpen(false);
-      }
-      if (tagFilterRef.current && !tagFilterRef.current.contains(event.target)) {
+      if (tagFilterRef.current && !tagFilterRef.current.contains(event.target))
         setIsTagFilterOpen(false);
-      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -67,6 +70,15 @@ const NotesList = ({
         </span>
 
         <div className="flex items-center gap-4 text-sm text-gray-500">
+          {/* Delete All Notes Button */}
+          <button
+            onClick={() => setIsDeleteAllOpen(true)}
+            className="flex items-center gap-1.5 text-red-400 hover:text-red-600 transition-colors border-r border-gray-200 pr-3"
+            title="Delete all notes"
+          >
+            <Trash2 size={16} /> Delete All
+          </button>
+
           {/* Tag Filter Button */}
           <div className="relative" ref={tagFilterRef}>
             <button
@@ -112,7 +124,6 @@ const NotesList = ({
             <span className="font-medium">Favorites</span>
           </button>
 
-          {/* Sort Dropdown */}
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -183,6 +194,17 @@ const NotesList = ({
         onClose={() => setIsModalOpen(false)}
         onEdit={onEdit}
         onDelete={onDelete}
+      />
+
+      {/* Render the Delete All Notes Modal */}
+      <DeleteAllNotesModal
+        isOpen={isDeleteAllOpen}
+        notes={rawNotes}
+        onClose={() => setIsDeleteAllOpen(false)}
+        onConfirm={() => {
+          onDeleteAllNotes();
+          setIsDeleteAllOpen(false);
+        }}
       />
     </div>
   );

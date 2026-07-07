@@ -41,7 +41,6 @@ const Dashboard = () => {
   const [isCreatingTag, setIsCreatingTag] = useState(false);
   const [newTagName, setNewTagName] = useState('');
 
-  // Helper to strip HTML for typing check
   const stripHtml = html => (html ? html.replace(/<[^>]*>/g, '') : '');
   const isTyping = title.trim() !== '' || stripHtml(content).trim() !== '';
 
@@ -86,6 +85,14 @@ const Dashboard = () => {
     setAllTags([]);
     setNotes(prevNotes => prevNotes.map(n => ({ ...n, tags: [] })));
     setEditorTags([]);
+    setFilterTag(null);
+  };
+
+  // NEW: Delete all notes function
+  const handleDeleteAllNotes = () => {
+    setNotes([]);
+    setEditingId(null);
+    setEditorDraft(initialDraft);
     setFilterTag(null);
   };
 
@@ -268,6 +275,7 @@ const Dashboard = () => {
             onEdit={handleEditNote}
             onDelete={handleDeleteNote}
             onToggleFavorite={handleToggleFavorite}
+            onDeleteAllNotes={handleDeleteAllNotes} // <--- Pass the new function
           />
         </div>
       </div>
