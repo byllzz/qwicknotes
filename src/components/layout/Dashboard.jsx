@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { Search } from 'lucide-react';
 import NoteEditor from '../features/NewNote/NoteEditor';
 import NotesList from '../features/NotesList/NotesList';
 import ConfirmationModal from '../common/ConfirmationModal';
@@ -9,9 +10,14 @@ const Dashboard = () => {
   const [content, setContent] = useState('');
   const [color, setColor] = useState('#000000');
   const [tags, setTags] = useState([]);
+
+  // Editing State
+  const [editingId, setEditingId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Normal Save Logic
+  // Typing indicator logic
+  const isTyping = title.trim() !== '' || content.trim() !== '';
+
   const handleSaveNote = () => {
     if (!title.trim() && !content.trim()) return;
     if (title.trim() && !content.trim()) {
@@ -22,21 +28,51 @@ const Dashboard = () => {
   };
 
   const createAndSaveNote = noteContent => {
-    const newNote = {
-      id: Date.now(),
-      title: title.trim() || 'Untitled',
-      content: noteContent.trim(),
-      color: color,
-      tags: tags,
-      createdAt: new Date().toISOString(),
-    };
-    setNotes([newNote, ...notes]);
+    if (editingId) {
+      // UPDATE existing note logic
+      setNotes(prevNotes =>
+        prevNotes.map(n =>
+          n.id === editingId
+            ? {
+                ...n,
+                title: title.trim() || 'Untitled',
+                content: noteContent.trim(),
+                color,
+                tags,
+              }
+            : n,
+        ),
+      );
+      setEditingId(null); // Reset edit mode
+    } else {
+      // CREATE new note logic
+      const newNote = {
+        id: Date.now(),
+        title: title.trim() || 'Untitled',
+        content: noteContent.trim(),
+        color,
+        tags,
+        createdAt: new Date().toISOString(),
+      };
+      setNotes([newNote, ...notes]);
+    }
+
+    // Clear the form
     setTitle('');
     setContent('');
     setTags([]);
   };
 
-  // NEW: Delete Logic
+  // Edit handler (Populates left panel)
+  const handleEditNote = note => {
+    setTitle(note.title);
+    setContent(note.content);
+    setColor(note.color);
+    setTags(note.tags);
+    setEditingId(note.id);
+  };
+
+  // Delete handler
   const handleDeleteNote = id => {
     setNotes(notes.filter(note => note.id !== id));
   };
@@ -51,24 +87,39 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="flex flex-row w-full h-[calc(100vh-80px)] p-6 gap-6 overflow-hidden bg-gray-50">
-      <div className="w-[42%] min-w-[450px] h-full">
-        <NoteEditor
-          title={title}
-          setTitle={setTitle}
-          content={content}
-          setContent={setContent}
-          color={color}
-          setColor={setColor}
-          tags={tags}
-          setTags={setTags}
-          onSave={handleSaveNote}
+    <div className="flex flex-col w-full h-[calc(100vh-80px)] p-6 gap-4 bg-gray-50 overflow-hidden">
+      {/* Top Search Bar (Matches Screenshot 2) */}
+      <div className="w-full bg-white rounded-xl shadow-sm border border-gray-100 px-4 py-3 flex items-center">
+        <Search size={18} className="text-gray-400 mr-3" />
+        <input
+          type="text"
+          placeholder="Search in titles and content..."
+          className="w-full outline-none text-sm text-gray-700 placeholder-gray-400 bg-transparent"
         />
       </div>
 
-      {/* Pass the delete handler down to the list */}
-      <div className="flex-1 h-full">
-        <NotesList notes={notes} onDelete={handleDeleteNote} />
+      <div className="flex flex-row w-full h-full gap-6 overflow-hidden">
+        {/* Left Panel: Note Creator */}
+        <div className="w-[42%] min-w-[450px] h-full">
+          <NoteEditor
+            title={title}
+            setTitle={setTitle}
+            content={content}
+            setContent={setContent}
+            color={color}
+            setColor={setColor}
+            tags={tags}
+            setTags={setTags}
+            onSave={handleSaveNote}
+            isTyping={isTyping} // Pass typing state
+            editingId={editingId}
+          />
+        </div>
+
+        {/* Right Panel: Note Storage */}
+        <div className="flex-1 h-full">
+          <NotesList notes={notes} onEdit={handleEditNote} onDelete={handleDeleteNote} />
+        </div>
       </div>
 
       <ConfirmationModal

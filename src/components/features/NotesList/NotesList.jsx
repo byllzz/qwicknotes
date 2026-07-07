@@ -1,7 +1,17 @@
+import { useState } from 'react';
 import { Star, ArrowDownUp, Download, FileText } from 'lucide-react';
-import NoteCard from './NoteCard'; // Import the new component
+import NoteCard from './NoteCard';
+import NoteModal from './NoteModal';
 
-const NotesList = ({ notes, onDelete }) => {
+const NotesList = ({ notes, onEdit, onDelete }) => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedNote, setSelectedNote] = useState(null);
+
+  const handleCardClick = note => {
+    setSelectedNote(note);
+    setIsModalOpen(true);
+  };
+
   return (
     <div className="h-full flex flex-col">
       <div className="flex justify-between items-center mb-6">
@@ -21,7 +31,6 @@ const NotesList = ({ notes, onDelete }) => {
         </div>
       </div>
 
-      {/* Content Area */}
       <div className="flex-1 bg-white rounded-xl shadow-sm border border-gray-100 p-4 overflow-y-auto">
         {notes.length === 0 ? (
           <div className="h-full flex flex-col items-center justify-center text-center">
@@ -32,14 +41,28 @@ const NotesList = ({ notes, onDelete }) => {
             <p className="text-gray-400 font-medium">No notes yet. Start writing!</p>
           </div>
         ) : (
-          // Grid or Vertical Stack for Notes
           <div className="flex flex-col gap-4">
             {notes.map(note => (
-              <NoteCard key={note.id} note={note} onDelete={onDelete} />
+              <NoteCard
+                key={note.id}
+                note={note}
+                onClick={handleCardClick}
+                onEdit={onEdit}
+                onDelete={onDelete}
+              />
             ))}
           </div>
         )}
       </div>
+
+      {/* Render the Detail Modal */}
+      <NoteModal
+        note={selectedNote}
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onEdit={onEdit}
+        onDelete={onDelete}
+      />
     </div>
   );
 };

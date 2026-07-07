@@ -22,15 +22,25 @@ const NoteEditor = ({
   tags,
   setTags,
   onSave,
+  isTyping,
+  editingId,
 }) => {
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-full flex flex-col relative">
       {/* Header & Star */}
       <div className="flex justify-between items-start mb-4">
         <h2 className="text-2xl text-gray-700 font-light">New Note</h2>
-        <button className="text-gray-400 hover:text-gray-600">
-          <Star size={20} />
-        </button>
+        <div className="flex items-center gap-3">
+          {/* Typing indicator */}
+          {isTyping && (
+            <span className="text-[10px] text-orange-400 bg-orange-50 px-2 py-0.5 rounded-full flex items-center">
+              ✏️ typing...
+            </span>
+          )}
+          <button className="text-gray-400 hover:text-gray-600 transition-colors">
+            <Star size={20} />
+          </button>
+        </div>
       </div>
 
       {/* Title Input */}
@@ -42,12 +52,12 @@ const NoteEditor = ({
         className="w-full text-lg font-medium text-gray-800 placeholder-gray-300 bg-transparent border-b border-gray-200 pb-2 mb-6 focus:outline-none focus:border-gray-400 transition-colors"
       />
 
-      {/* Color Slider  */}
+      {/* Color Slider */}
       <div className="flex items-center gap-4 mb-6">
         <input
           type="range"
           min="#000000"
-          max="#ffffff" // Simplified for demo
+          max="#ffffff"
           value={color}
           onChange={e => setColor(e.target.value)}
           className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-black"
@@ -73,37 +83,37 @@ const NoteEditor = ({
 
       {/* Rich Text Toolbar */}
       <div className="bg-gray-50 rounded-lg p-1.5 flex flex-wrap gap-1 mb-4">
-        <button className="p-1.5 hover:bg-gray-200 rounded text-gray-600">
+        <button className="p-1.5 hover:bg-gray-200 rounded text-gray-600 transition-colors">
           <Bold size={16} />
         </button>
-        <button className="p-1.5 hover:bg-gray-200 rounded text-gray-600">
+        <button className="p-1.5 hover:bg-gray-200 rounded text-gray-600 transition-colors">
           <Italic size={16} />
         </button>
-        <button className="p-1.5 hover:bg-gray-200 rounded text-gray-600">
+        <button className="p-1.5 hover:bg-gray-200 rounded text-gray-600 transition-colors">
           <Underline size={16} />
         </button>
         <div className="w-px h-6 bg-gray-300 mx-1 self-center"></div>
-        <button className="p-1.5 hover:bg-gray-200 rounded text-gray-600">
+        <button className="p-1.5 hover:bg-gray-200 rounded text-gray-600 transition-colors">
           <Heading1 size={16} />
         </button>
-        <button className="p-1.5 hover:bg-gray-200 rounded text-gray-600">
+        <button className="p-1.5 hover:bg-gray-200 rounded text-gray-600 transition-colors">
           <Heading2 size={16} />
         </button>
-        <button className="p-1.5 hover:bg-gray-200 rounded text-gray-600">
+        <button className="p-1.5 hover:bg-gray-200 rounded text-gray-600 transition-colors">
           <Heading3 size={16} />
         </button>
         <div className="w-px h-6 bg-gray-300 mx-1 self-center"></div>
-        <button className="p-1.5 hover:bg-gray-200 rounded text-gray-600">
+        <button className="p-1.5 hover:bg-gray-200 rounded text-gray-600 transition-colors">
           <List size={16} />
         </button>
-        <button className="p-1.5 hover:bg-gray-200 rounded text-gray-600">
+        <button className="p-1.5 hover:bg-gray-200 rounded text-gray-600 transition-colors">
           <Quote size={16} />
         </button>
         <div className="w-px h-6 bg-gray-300 mx-1 self-center"></div>
-        <button className="p-1.5 hover:bg-gray-200 rounded text-gray-600">
+        <button className="p-1.5 hover:bg-gray-200 rounded text-gray-600 transition-colors">
           <Undo size={16} />
         </button>
-        <button className="p-1.5 hover:bg-gray-200 rounded text-gray-600">
+        <button className="p-1.5 hover:bg-gray-200 rounded text-gray-600 transition-colors">
           <Redo size={16} />
         </button>
       </div>
@@ -113,7 +123,7 @@ const NoteEditor = ({
         value={content}
         onChange={e => setContent(e.target.value)}
         placeholder="Start writing..."
-        className="flex-1 w-full bg-transparent text-gray-700 placeholder-gray-400 resize-none focus:outline-none min-h-[200px]"
+        className="flex-1 w-full bg-transparent text-gray-700 placeholder-gray-400 resize-none focus:outline-none min-h-[150px]"
       />
 
       {/* Save Button */}
@@ -121,7 +131,7 @@ const NoteEditor = ({
         onClick={onSave}
         className="mt-4 w-full py-3 bg-gray-400 hover:bg-gray-500 text-white font-medium rounded-lg transition-colors"
       >
-        Save Note
+        {editingId ? 'Update Note' : 'Save Note'}
       </button>
     </div>
   );
