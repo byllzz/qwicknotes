@@ -3,7 +3,7 @@ import { Search } from 'lucide-react';
 import NoteEditor from '../features/NewNote/NoteEditor';
 import NotesList from '../features/NotesList/NotesList';
 import ConfirmationModal from '../common/ConfirmationModal';
-import DeleteConfirmationModal from '../common/DeleteConfirmationModal'; // Import new modal
+import DeleteConfirmationModal from '../common/DeleteConfirmationModal';
 import useLocalStorage from '../../hooks/useLocalStorage';
 
 const initialDraft = {
@@ -32,7 +32,7 @@ const Dashboard = () => {
   const [editingId, setEditingId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // New Delete Modal State
+  // Delete Modal State
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [noteToDelete, setNoteToDelete] = useState(null);
 
@@ -138,16 +138,14 @@ const Dashboard = () => {
     setIsDeleteModalOpen(true);
   };
 
-  // Handle the actual deletion after user confirms in the detailed modal
+  // Handle the actual deletion after user confirms
   const handleDeleteConfirmed = () => {
-    // 1. Check if we are currently editing this note
+    // If we are editing this note, reset the editor
     if (editingId === noteToDelete) {
       setEditingId(null);
-      setEditorDraft(initialDraft); // Reset editor completely
+      setEditorDraft(initialDraft);
     }
-    // 2. Delete the note from the main list
     setNotes(notes.filter(note => note.id !== noteToDelete));
-    // 3. Close modal
     setIsDeleteModalOpen(false);
     setNoteToDelete(null);
   };
@@ -202,6 +200,7 @@ const Dashboard = () => {
             setSortOption={setSortOption}
             showFavoritesOnly={showFavoritesOnly}
             setShowFavoritesOnly={setShowFavoritesOnly}
+            currentEditingId={editingId} // Pass down the ID for disabling delete
             onEdit={handleEditNote}
             onDelete={handleDeleteNote}
             onToggleFavorite={handleToggleFavorite}
@@ -209,7 +208,6 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Modal: Empty Description */}
       <ConfirmationModal
         isOpen={isModalOpen}
         onClose={handleModalCancel}
@@ -218,10 +216,9 @@ const Dashboard = () => {
         message="You haven't added any content. Proceed with a default description?"
       />
 
-      {/* NEW: Detailed Delete Confirmation Modal */}
       <DeleteConfirmationModal
         isOpen={isDeleteModalOpen}
-        note={notes.find(n => n.id === noteToDelete)} // Find the specific note to pass details
+        note={notes.find(n => n.id === noteToDelete)}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDeleteConfirmed}
       />

@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Star, ArrowDownUp, Download, FileText } from 'lucide-react';
 import NoteCard from './NoteCard';
-import NoteModal from './NoteModal'; // <--- RE-IMPORT MODAL
+import NoteModal from './NoteModal';
 
 const sortOptions = [
   'Newest First',
@@ -21,6 +21,7 @@ const NotesList = ({
   setSortOption,
   showFavoritesOnly,
   setShowFavoritesOnly,
+  currentEditingId, // <--- New Prop
   onEdit,
   onDelete,
   onToggleFavorite,
@@ -28,7 +29,6 @@ const NotesList = ({
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  // Restore Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedNote, setSelectedNote] = useState(null);
 
@@ -118,7 +118,8 @@ const NotesList = ({
               <NoteCard
                 key={note.id}
                 note={note}
-                onCardClick={handleCardClick} // <--- PASS HANDLER
+                currentEditingId={currentEditingId} // <--- Pass down
+                onCardClick={handleCardClick}
                 onEdit={onEdit}
                 onDelete={onDelete}
                 onToggleFavorite={onToggleFavorite}
@@ -128,7 +129,6 @@ const NotesList = ({
         )}
       </div>
 
-      {/* Restore Note Modal */}
       <NoteModal
         note={selectedNote}
         isOpen={isModalOpen}

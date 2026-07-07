@@ -12,7 +12,7 @@ const formatDateTime = dateString => {
   return `${month}/${day}/${year} at ${hours}:${minutes} ${ampm}`;
 };
 
-const NoteCard = ({ note, onCardClick, onEdit, onDelete, onToggleFavorite }) => {
+const NoteCard = ({ note, onCardClick, onEdit, onDelete, onToggleFavorite, currentEditingId }) => {
   const charSize = note.content.length;
   const sizeLabel = charSize === 0 ? 'Empty' : `${charSize} chars`;
 
@@ -20,9 +20,12 @@ const NoteCard = ({ note, onCardClick, onEdit, onDelete, onToggleFavorite }) => 
     note.updatedAt && note.updatedAt !== note.createdAt ? note.updatedAt : note.createdAt;
   const dateLabel = note.updatedAt && note.updatedAt !== note.createdAt ? 'Updated' : 'Created';
 
+  // Check if this specific card is currently being edited
+  const isEditingThisCard = currentEditingId === note.id;
+
   return (
     <div
-      onClick={() => onCardClick(note)} /* <--- RESTORE CLICK HANDLER */
+      onClick={() => onCardClick(note)}
       className="group bg-white rounded-xl shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] border border-gray-200 p-4 hover:shadow-md cursor-pointer transition-all flex flex-col justify-between gap-2"
       style={{
         backgroundColor: note.bgColor || '#ffffff',
@@ -63,9 +66,20 @@ const NoteCard = ({ note, onCardClick, onEdit, onDelete, onToggleFavorite }) => 
             <Pencil size={11} /> Edit
           </button>
           <span className="opacity-50 font-normal text-[10px]">{sizeLabel}</span>
+
+          {/* DISABLED DELETE BUTTON LOGIC */}
           <button
-            onClick={() => onDelete(note.id)}
-            className="text-red-400 hover:text-red-600 flex items-center gap-1 transition-colors"
+            onClick={() => {
+              if (!isEditingThisCard) {
+                onDelete(note.id);
+              }
+            }}
+            className={`flex items-center gap-1 transition-colors ${
+              isEditingThisCard
+                ? 'text-gray-300 cursor-not-allowed opacity-50'
+                : 'text-red-400 hover:text-red-600'
+            }`}
+            title={isEditingThisCard ? 'Cannot delete while editing in left panel' : 'Delete note'}
           >
             <Trash2 size={11} /> Delete
           </button>
