@@ -20,11 +20,12 @@ const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useLocalStorage('qwicknotes_search', '');
   const [sortOption, setSortOption] = useLocalStorage('qwicknotes_sort', 'Newest First');
   const [showFavoritesOnly, setShowFavoritesOnly] = useLocalStorage('qwicknotes_show_favs', false);
-  const [filterTag, setFilterTag] = useLocalStorage('qwicknotes_filter_tag', null); // New filter state
-  const [allTags, setAllTags] = useLocalStorage('qwicknotes_all_tags', ['Work', 'Personal']); // Global tag list with defaults
+  const [filterTag, setFilterTag] = useLocalStorage('qwicknotes_filter_tag', null);
+  const [allTags, setAllTags] = useLocalStorage('qwicknotes_all_tags', ['Work', 'Personal']);
   const [editorDraft, setEditorDraft] = useLocalStorage('qwicknotes_editor_draft', initialDraft);
 
-  const { title, content, bgColor, textColor, editorFavorite, tags } = editorDraft;
+  // FIXED: Added fallback default array `= []` to prevent undefined tags
+  const { title, content, bgColor, textColor, editorFavorite, tags = [] } = editorDraft;
 
   const setTitle = val => setEditorDraft(prev => ({ ...prev, title: val }));
   const setContent = val => setEditorDraft(prev => ({ ...prev, content: val }));
@@ -38,13 +39,11 @@ const Dashboard = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [noteToDelete, setNoteToDelete] = useState(null);
 
-  // State for the Create Tag Popup
   const [isCreatingTag, setIsCreatingTag] = useState(false);
   const [newTagName, setNewTagName] = useState('');
 
   const isTyping = title.trim() !== '' || content.trim() !== '';
 
-  // SYNC LOGIC: Reload editing state on refresh
   useEffect(() => {
     if (editingId) {
       const noteToEdit = notes.find(n => n.id === editingId);
@@ -64,7 +63,6 @@ const Dashboard = () => {
     }
   }, []);
 
-  // Filter Logic (Search + Favorites + Tags)
   const filteredNotes = notes.filter(note => {
     const matchesSearch =
       note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -132,7 +130,7 @@ const Dashboard = () => {
                 bgColor,
                 textColor,
                 isFavorite: editorFavorite,
-                tags: tags, // Save tags
+                tags: tags,
                 updatedAt: new Date().toISOString(),
               }
             : n,
@@ -147,7 +145,7 @@ const Dashboard = () => {
         bgColor,
         textColor,
         isFavorite: editorFavorite,
-        tags: tags, // Save tags
+        tags: tags,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
@@ -224,7 +222,7 @@ const Dashboard = () => {
             tags={tags}
             setTags={setEditorTags}
             allTags={allTags}
-            isCreatingTag={isCreatingTag} // Pass creating state to dim tags
+            isCreatingTag={isCreatingTag}
             onSave={handleSaveNote}
             isTyping={isTyping}
             isEditing={!!editingId}
