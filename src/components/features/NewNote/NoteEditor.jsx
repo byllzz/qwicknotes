@@ -15,16 +15,21 @@ import {
   Check,
 } from 'lucide-react';
 
-// Predefined Palettes
+// Expanded Palettes
 const BG_COLORS = [
   { label: 'Default', value: '' },
   { label: 'White', value: '#ffffff' },
   { label: 'Light Gray', value: '#f3f4f6' },
   { label: 'Yellow', value: '#fef9c3' },
-  { label: 'Blue', value: '#dbeafe' },
+  { label: 'Orange', value: '#ffedd5' },
+  { label: 'Rose', value: '#ffe4e6' },
   { label: 'Red', value: '#fee2e2' },
-  { label: 'Green', value: '#dcfce7' },
+  { label: 'Teal', value: '#ccfbf1' },
+  { label: 'Blue', value: '#dbeafe' },
+  { label: 'Indigo', value: '#e0e7ff' },
   { label: 'Purple', value: '#f3e8ff' },
+  { label: 'Green', value: '#dcfce7' },
+  { label: 'Slate', value: '#f1f5f9' },
 ];
 
 const TEXT_COLORS = [
@@ -32,8 +37,25 @@ const TEXT_COLORS = [
   { label: 'White', value: '#ffffff' },
   { label: 'Gray', value: '#6b7280' },
   { label: 'Blue', value: '#2563eb' },
+  { label: 'Indigo', value: '#4f46e5' },
+  { label: 'Purple', value: '#7c3aed' },
   { label: 'Red', value: '#dc2626' },
+  { label: 'Orange', value: '#ea580c' },
   { label: 'Green', value: '#16a34a' },
+  { label: 'Teal', value: '#0d9488' },
+  { label: 'Rose', value: '#e11d48' },
+];
+
+// New Pre-made Gradients (Sets BOTH bg & text)
+const GRADIENT_COLORS = [
+  { label: 'Sunset', bg: '#fef08a', text: '#b45309' },
+  { label: 'Midnight', bg: '#1e293b', text: '#f8fafc' },
+  { label: 'Forest', bg: '#dcfce7', text: '#166534' },
+  { label: 'Ocean', bg: '#e0f2fe', text: '#0369a1' },
+  { label: 'Lavender', bg: '#f3e8ff', text: '#6b21a8' },
+  { label: 'Rose Gold', bg: '#ffe4e6', text: '#be123c' },
+  { label: 'Storm', bg: '#cbd5e1', text: '#1e293b' },
+  { label: 'Candy', bg: '#fce7f3', text: '#9d174d' },
 ];
 
 const NoteEditor = ({
@@ -79,9 +101,18 @@ const NoteEditor = ({
     setShowPicker(false);
   };
 
+  // New Gradient Handler
+  const handleSelectGradient = (bg, text) => {
+    setBgColor(bg);
+    setTextColor(text);
+    setShowPicker(false);
+  };
+
   // Determine label to show on the button
   const currentBGLabel = BG_COLORS.find(c => c.value === bgColor)?.label || 'Default';
   const currentTextLabel = TEXT_COLORS.find(c => c.value === textColor)?.label || 'Black';
+  // Check if it matches a gradient preset to show a nicer label (Optional UX touch)
+  const matchedGradient = GRADIENT_COLORS.find(g => g.bg === bgColor && g.text === textColor);
 
   return (
     <div
@@ -135,7 +166,7 @@ const NoteEditor = ({
         ></div>
       </div>
 
-      {/* Color Style Picker (Replaces Tags Section) */}
+      {/* Color Style Picker */}
       <div className="relative mb-4" ref={pickerRef}>
         <span className="text-xs text-gray-500 font-medium block mb-1.5">Card Style</span>
         <button
@@ -147,7 +178,9 @@ const NoteEditor = ({
               className="w-4 h-4 rounded-full border border-gray-300"
               style={{ backgroundColor: bgColor || '#ffffff' }}
             ></span>
-            <span className="text-gray-700">BG: {currentBGLabel}</span>
+            <span className="text-gray-700">
+              {matchedGradient ? `✨ ${matchedGradient.label}` : `BG: ${currentBGLabel}`}
+            </span>
           </span>
           <span className="text-gray-300">|</span>
           <span className="flex items-center gap-1.5">
@@ -161,7 +194,32 @@ const NoteEditor = ({
 
         {/* The Popup */}
         {showPicker && (
-          <div className="absolute top-12 left-0 z-20 bg-white border border-gray-200 rounded-xl shadow-xl p-4 w-64 flex flex-col gap-3 animate-in fade-in zoom-in-95 duration-100">
+          <div className="absolute top-12 left-0 z-20 bg-white border border-gray-200 rounded-xl shadow-xl p-4 w-72 flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-100">
+            {/* New Section: Gradients */}
+            <div>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                ✨ Quick Gradients
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {GRADIENT_COLORS.map(g => (
+                  <button
+                    key={g.label}
+                    onClick={() => handleSelectGradient(g.bg, g.text)}
+                    className="w-8 h-8 rounded-full border border-gray-200 flex items-center justify-center hover:scale-110 transition-all"
+                    style={{ backgroundColor: g.bg }}
+                    title={g.label}
+                  >
+                    <span className="text-[10px] font-bold" style={{ color: g.text }}>
+                      Aa
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="w-full h-px bg-gray-100"></div>
+
+            {/* Background Colors */}
             <div>
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
                 Background
@@ -189,8 +247,9 @@ const NoteEditor = ({
               </div>
             </div>
 
-            <div className="w-full h-px bg-gray-100 my-1"></div>
+            <div className="w-full h-px bg-gray-100"></div>
 
+            {/* Text Colors */}
             <div>
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
                 Text Color
