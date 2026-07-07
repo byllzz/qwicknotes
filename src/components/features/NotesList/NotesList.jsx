@@ -2,7 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Star, ArrowDownUp, Download, FileText, Tags, Trash2 } from 'lucide-react';
 import NoteCard from './NoteCard';
 import NoteModal from './NoteModal';
-import DeleteAllNotesModal from '../../common/DeleteAllNotesModal'; // Import new modal
+import DeleteAllNotesModal from '../../common/DeleteAllNotesModal';
+import ExportDropdown from './ExportDropdown'; // Import Dropdown
+import IndividualExportModal from './IndividualExportModal'; // Import Modal
 
 const sortOptions = [
   'Newest First',
@@ -29,7 +31,7 @@ const NotesList = ({
   onEdit,
   onDelete,
   onToggleFavorite,
-  onDeleteAllNotes, // <--- Receive the function
+  onDeleteAllNotes,
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -40,8 +42,11 @@ const NotesList = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedNote, setSelectedNote] = useState(null);
 
-  // State for the Delete All Modal
   const [isDeleteAllOpen, setIsDeleteAllOpen] = useState(false);
+
+  // NEW: Export State
+  const [isExportOpen, setIsExportOpen] = useState(false);
+  const [isIndividualExportOpen, setIsIndividualExportOpen] = useState(false);
 
   const handleCardClick = note => {
     setSelectedNote(note);
@@ -64,12 +69,12 @@ const NotesList = ({
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-6 relative">
         <span className="text-gray-500 text-sm font-medium tracking-wider">
           NOTES ({notes.length})
         </span>
 
-        <div className="flex items-center gap-4 text-sm text-gray-500">
+        <div className="flex items-center gap-4 text-sm text-gray-500 relative">
           {/* Delete All Notes Button */}
           <button
             onClick={() => setIsDeleteAllOpen(true)}
@@ -78,6 +83,22 @@ const NotesList = ({
           >
             <Trash2 size={16} /> Delete All
           </button>
+
+          {/* Export Button with Dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setIsExportOpen(!isExportOpen)}
+              className="flex items-center gap-1 hover:text-gray-800 transition-colors"
+            >
+              <Download size={16} /> Export
+            </button>
+            <ExportDropdown
+              isOpen={isExportOpen}
+              onClose={() => setIsExportOpen(false)}
+              notes={notes}
+              onOpenIndividualExport={() => setIsIndividualExportOpen(true)}
+            />
+          </div>
 
           {/* Tag Filter Button */}
           <div className="relative" ref={tagFilterRef}>
@@ -148,10 +169,6 @@ const NotesList = ({
               </div>
             )}
           </div>
-
-          <button className="flex items-center gap-1 hover:text-gray-800">
-            <Download size={16} /> Export
-          </button>
         </div>
       </div>
 
@@ -196,7 +213,6 @@ const NotesList = ({
         onDelete={onDelete}
       />
 
-      {/* Render the Delete All Notes Modal */}
       <DeleteAllNotesModal
         isOpen={isDeleteAllOpen}
         notes={rawNotes}
@@ -205,6 +221,13 @@ const NotesList = ({
           onDeleteAllNotes();
           setIsDeleteAllOpen(false);
         }}
+      />
+
+      {/* NEW: Individual Export Modal */}
+      <IndividualExportModal
+        isOpen={isIndividualExportOpen}
+        onClose={() => setIsIndividualExportOpen(false)}
+        notes={notes}
       />
     </div>
   );
