@@ -23,15 +23,22 @@ const NoteEditor = ({
   setTags,
   onSave,
   isTyping,
-  editingId,
+  isEditing,
 }) => {
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 h-full flex flex-col relative">
+    /* Add conditional border and background color for Edit Mode */
+    <div
+      className={`bg-white rounded-xl shadow-sm border ${isEditing ? 'border-blue-400 border-2 bg-blue-50/20' : 'border-gray-100'} p-6 h-full flex flex-col relative transition-all duration-200`}
+    >
       {/* Header & Star */}
       <div className="flex justify-between items-start mb-4">
-        <h2 className="text-2xl text-gray-700 font-light">New Note</h2>
+        {/* Change text dynamically based on mode */}
+        <h2
+          className={`text-2xl ${isEditing ? 'text-blue-600 font-medium' : 'text-gray-700 font-light'}`}
+        >
+          {isEditing ? '✏️ Editing Note' : 'New Note'}
+        </h2>
         <div className="flex items-center gap-3">
-          {/* Typing indicator */}
           {isTyping && (
             <span className="text-[10px] text-orange-400 bg-orange-50 px-2 py-0.5 rounded-full flex items-center">
               ✏️ typing...
@@ -43,13 +50,13 @@ const NoteEditor = ({
         </div>
       </div>
 
-      {/* Title Input */}
+      {/* Title Input - Add highlight background */}
       <input
         type="text"
         value={title}
         onChange={e => setTitle(e.target.value)}
         placeholder="Note title"
-        className="w-full text-lg font-medium text-gray-800 placeholder-gray-300 bg-transparent border-b border-gray-200 pb-2 mb-6 focus:outline-none focus:border-gray-400 transition-colors"
+        className={`w-full text-lg font-medium text-gray-800 placeholder-gray-300 bg-transparent border-b pb-2 mb-6 focus:outline-none focus:border-gray-400 transition-colors ${isEditing ? 'border-blue-400' : 'border-gray-200'}`}
       />
 
       {/* Color Slider */}
@@ -123,15 +130,15 @@ const NoteEditor = ({
         value={content}
         onChange={e => setContent(e.target.value)}
         placeholder="Start writing..."
-        className="flex-1 w-full bg-transparent text-gray-700 placeholder-gray-400 resize-none focus:outline-none min-h-[150px]"
+        className={`flex-1 w-full bg-transparent text-gray-700 placeholder-gray-400 resize-none focus:outline-none min-h-[150px] ${isEditing ? 'bg-blue-50/30 p-2 rounded' : ''}`}
       />
 
       {/* Save Button */}
       <button
         onClick={onSave}
-        className="mt-4 w-full py-3 bg-gray-400 hover:bg-gray-500 text-white font-medium rounded-lg transition-colors"
+        className={`mt-4 w-full py-3 font-medium rounded-lg transition-colors ${isEditing ? 'bg-blue-500 hover:bg-blue-600 text-white' : 'bg-gray-400 hover:bg-gray-500 text-white'}`}
       >
-        {editingId ? 'Update Note' : 'Save Note'}
+        {isEditing ? 'Update Note' : 'Save Note'}
       </button>
     </div>
   );

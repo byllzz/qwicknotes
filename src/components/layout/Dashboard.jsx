@@ -10,12 +10,15 @@ const Dashboard = () => {
   const [content, setContent] = useState('');
   const [color, setColor] = useState('#000000');
   const [tags, setTags] = useState([]);
-
-  // Editing State
   const [editingId, setEditingId] = useState(null);
+
+  // Modal State 1: Empty Description Popup
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // Typing indicator logic
+  // Modal State 2: Delete Conflict Popup
+  const [deleteConflictOpen, setDeleteConflictOpen] = useState(false);
+  const [noteToDeleteId, setNoteToDeleteId] = useState(null);
+
   const isTyping = title.trim() !== '' || content.trim() !== '';
 
   const handleSaveNote = () => {
@@ -29,23 +32,15 @@ const Dashboard = () => {
 
   const createAndSaveNote = noteContent => {
     if (editingId) {
-      // UPDATE existing note logic
       setNotes(prevNotes =>
         prevNotes.map(n =>
           n.id === editingId
-            ? {
-                ...n,
-                title: title.trim() || 'Untitled',
-                content: noteContent.trim(),
-                color,
-                tags,
-              }
+            ? { ...n, title: title.trim() || 'Untitled', content: noteContent.trim(), color, tags }
             : n,
         ),
       );
-      setEditingId(null); // Reset edit mode
+      setEditingId(null);
     } else {
-      // CREATE new note logic
       const newNote = {
         id: Date.now(),
         title: title.trim() || 'Untitled',
@@ -57,13 +52,11 @@ const Dashboard = () => {
       setNotes([newNote, ...notes]);
     }
 
-    // Clear the form
     setTitle('');
     setContent('');
     setTags([]);
   };
 
-  // Edit handler (Populates left panel)
   const handleEditNote = note => {
     setTitle(note.title);
     setContent(note.content);
@@ -72,12 +65,36 @@ const Dashboard = () => {
     setEditingId(note.id);
   };
 
-  // Delete handler
+  // UPDATED: Delete handler with Conflict Check
   const handleDeleteNote = id => {
-    setNotes(notes.filter(note => note.id !== id));
+    if (editingId === id) {
+      // Trigger the Conflict Popup if deleting the currently edited note
+      setNoteToDeleteId(id);
+      setDeleteConflictOpen(true);
+    } else {
+      setNotes(notes.filter(note => note.id !== id));
+    }
   };
 
-  // Modal Handlers
+  // Confirm delete while editing
+  const handleDeleteConflictConfirm = () => {
+    // 1. Reset the left panel
+    setEditingId(null);
+    setTitle('');
+    setContent('');
+    // 2. Delete the note
+    setNotes(notes.filter(note => note.id !== noteToDeleteId));
+    // 3. Close modal
+    setDeleteConflictOpen(false);
+    setNoteToDeleteId(null);
+  };
+
+  const handleDeleteConflictCancel = () => {
+    setDeleteConflictOpen(false);
+    setNoteToDeleteId(null);
+  };
+
+  // Modal Handlers (Empty desc)
   const handleModalConfirm = () => {
     createAndSaveNote('No description provided.');
     setIsModalOpen(false);
@@ -88,7 +105,6 @@ const Dashboard = () => {
 
   return (
     <div className="flex flex-col w-full h-[calc(100vh-80px)] p-6 gap-4 bg-gray-50 overflow-hidden">
-      {/* Top Search Bar (Matches Screenshot 2) */}
       <div className="w-full bg-white rounded-xl shadow-sm border border-gray-100 px-4 py-3 flex items-center">
         <Search size={18} className="text-gray-400 mr-3" />
         <input
@@ -99,7 +115,7 @@ const Dashboard = () => {
       </div>
 
       <div className="flex flex-row w-full h-full gap-6 overflow-hidden">
-        {/* Left Panel: Note Creator */}
+        {/* Left Panel */}
         <div className="w-[42%] min-w-[450px] h-full">
           <NoteEditor
             title={title}
@@ -111,23 +127,34 @@ const Dashboard = () => {
             tags={tags}
             setTags={setTags}
             onSave={handleSaveNote}
-            isTyping={isTyping} // Pass typing state
+            isTyping={isTyping}
+            isEditing={!!editingId}
             editingId={editingId}
           />
         </div>
 
-        {/* Right Panel: Note Storage */}
+        {/* Right Panel */}
         <div className="flex-1 h-full">
           <NotesList notes={notes} onEdit={handleEditNote} onDelete={handleDeleteNote} />
         </div>
       </div>
 
+      {/* Modal: Empty Description */}
       <ConfirmationModal
         isOpen={isModalOpen}
         onClose={handleModalCancel}
         onConfirm={handleModalConfirm}
         title="Empty Description"
         message="You haven't added any content to this note. Proceed with a default description?"
+      />
+
+      {/* NEW Modal: Delete Conflict */}
+      <ConfirmationModal
+        isOpen={deleteConflictOpen}
+        onClose={handleDeleteConflictCancel}
+        onConfirm={handleDeleteConflictConfirm}
+        title="Currently Editing This Note"
+        message="You are actively editing this note in the left panel. If you delete it now, the editor will reset to a new note. Are you sure you want to delete it?"
       />
     </div>
   );
