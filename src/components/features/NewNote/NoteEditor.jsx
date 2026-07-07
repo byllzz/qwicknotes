@@ -165,24 +165,24 @@ const NoteEditor = ({
           <ChevronDown size={14} className="text-gray-400 ml-1" />
         </button>
 
-        {/* The Popup - 3 Columns Layout */}
+        {/* UPDATED: 3-Column Horizontal Popup */}
         {showPicker && (
-          <div className="absolute top-12 left-0 z-20 bg-white border border-gray-200 rounded-xl shadow-xl p-4 w-72 flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-100">
-            {/* Gradients - 3 Columns */}
-            <div>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
-                ✨ Quick Gradients
+          <div className="absolute top-12 left-0 z-20 bg-white border border-gray-200 rounded-xl shadow-xl p-3 w-[340px] flex flex-row gap-3 items-start animate-in fade-in zoom-in-95 duration-100">
+            {/* Column 1: Gradients */}
+            <div className="flex flex-col items-center flex-1 gap-1.5">
+              <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">
+                ✨ Gradients
               </p>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="flex flex-wrap justify-center gap-1">
                 {GRADIENT_COLORS.map(g => (
                   <button
                     key={g.label}
                     onClick={() => handleSelectGradient(g.bg, g.text)}
-                    className="w-full aspect-square rounded-full border border-gray-200 flex items-center justify-center hover:scale-110 transition-all"
+                    className="w-6 h-6 rounded-full border border-gray-200 flex items-center justify-center hover:scale-110 transition-all"
                     style={{ backgroundColor: g.bg }}
                     title={g.label}
                   >
-                    <span className="text-[10px] font-bold" style={{ color: g.text }}>
+                    <span className="text-[6px] font-bold" style={{ color: g.text }}>
                       Aa
                     </span>
                   </button>
@@ -190,23 +190,23 @@ const NoteEditor = ({
               </div>
             </div>
 
-            <div className="w-full h-px bg-gray-100"></div>
+            <div className="w-px bg-gray-200 self-stretch"></div>
 
-            {/* Background Colors - 3 Columns */}
-            <div>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+            {/* Column 2: Background Colors */}
+            <div className="flex flex-col items-center flex-1 gap-1.5">
+              <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">
                 Background
               </p>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="flex flex-wrap justify-center gap-1">
                 {BG_COLORS.map(c => (
                   <button
                     key={c.label}
                     onClick={() => handleSelectBG(c.value)}
-                    className={`w-full aspect-square rounded-full border border-gray-200 flex items-center justify-center transition-all hover:scale-110 ${bgColor === c.value ? 'ring-2 ring-black ring-offset-1' : ''}`}
+                    className={`w-5 h-5 rounded-full border border-gray-200 flex items-center justify-center transition-all hover:scale-110 ${bgColor === c.value ? 'ring-1 ring-black ring-offset-1' : ''}`}
                     style={{ backgroundColor: c.value || '#ffffff' }}
                     title={c.label}
                   >
-                    {c.value === '' && <span className="text-[8px] text-gray-400">∅</span>}
+                    {c.value === '' && <span className="text-[6px] text-gray-400">∅</span>}
                     {bgColor === c.value && (
                       <Check
                         size={10}
@@ -220,25 +220,23 @@ const NoteEditor = ({
               </div>
             </div>
 
-            <div className="w-full h-px bg-gray-100"></div>
+            <div className="w-px bg-gray-200 self-stretch"></div>
 
-            {/* Text Colors - 3 Columns */}
-            <div>
-              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+            {/* Column 3: Text Colors */}
+            <div className="flex flex-col items-center flex-1 gap-1.5">
+              <p className="text-[9px] font-bold text-gray-400 uppercase tracking-wider">
                 Text Color
               </p>
-              <div className="grid grid-cols-3 gap-2">
+              <div className="flex flex-wrap justify-center gap-1">
                 {TEXT_COLORS.map(c => (
                   <button
                     key={c.label}
                     onClick={() => handleSelectText(c.value)}
-                    className={`w-full aspect-square rounded-full border border-gray-200 flex items-center justify-center transition-all hover:scale-110 ${textColor === c.value ? 'ring-2 ring-black ring-offset-1' : ''}`}
+                    className={`w-5 h-5 rounded-full border border-gray-200 flex items-center justify-center transition-all hover:scale-110 ${textColor === c.value ? 'ring-1 ring-black ring-offset-1' : ''}`}
                     style={{ backgroundColor: c.value }}
                     title={c.label}
                   >
-                    <span className="text-[10px] font-bold text-white mix-blend-difference">
-                      Aa
-                    </span>
+                    <span className="text-[6px] font-bold text-white mix-blend-difference">Aa</span>
                   </button>
                 ))}
               </div>
