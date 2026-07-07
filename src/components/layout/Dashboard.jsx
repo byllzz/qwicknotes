@@ -3,9 +3,10 @@ import { Search } from 'lucide-react';
 import NoteEditor from '../features/NewNote/NoteEditor';
 import NotesList from '../features/NotesList/NotesList';
 import ConfirmationModal from '../common/ConfirmationModal';
+import useLocalStorage from '../../hooks/useLocalStorage';
 
 const Dashboard = () => {
-  const [notes, setNotes] = useState([]);
+  const [notes, setNotes] = useLocalStorage('qwicknotes_notes', []);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [color, setColor] = useState('#000000');
