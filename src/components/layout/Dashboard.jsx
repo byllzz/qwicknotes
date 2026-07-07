@@ -3,9 +3,9 @@ import { Search } from 'lucide-react';
 import NoteEditor from '../features/NewNote/NoteEditor';
 import NotesList from '../features/NotesList/NotesList';
 import ConfirmationModal from '../common/ConfirmationModal';
+import DeleteConfirmationModal from '../common/DeleteConfirmationModal'; // Import new modal
 import useLocalStorage from '../../hooks/useLocalStorage';
 
-// Default draft state if nothing is in localstorage yet
 const initialDraft = {
   title: '',
   content: '',
@@ -19,14 +19,10 @@ const Dashboard = () => {
   const [searchQuery, setSearchQuery] = useLocalStorage('qwicknotes_search', '');
   const [sortOption, setSortOption] = useLocalStorage('qwicknotes_sort', 'Newest First');
   const [showFavoritesOnly, setShowFavoritesOnly] = useLocalStorage('qwicknotes_show_favs', false);
-
-  // Persist the ENTIRE left panel draft state
   const [editorDraft, setEditorDraft] = useLocalStorage('qwicknotes_editor_draft', initialDraft);
 
-  // Destructure the draft for the props expected by NoteEditor
   const { title, content, bgColor, textColor, editorFavorite } = editorDraft;
 
-  // Create wrapper setters that update the draft object in localStorage
   const setTitle = val => setEditorDraft(prev => ({ ...prev, title: val }));
   const setContent = val => setEditorDraft(prev => ({ ...prev, content: val }));
   const setBgColor = val => setEditorDraft(prev => ({ ...prev, bgColor: val }));
@@ -34,14 +30,14 @@ const Dashboard = () => {
   const setEditorFavorite = val => setEditorDraft(prev => ({ ...prev, editorFavorite: val }));
 
   const [editingId, setEditingId] = useState(null);
-
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [deleteConflictOpen, setDeleteConflictOpen] = useState(false);
-  const [noteToDeleteId, setNoteToDeleteId] = useState(null);
+
+  // New Delete Modal State
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [noteToDelete, setNoteToDelete] = useState(null);
 
   const isTyping = title.trim() !== '' || content.trim() !== '';
 
-  // Filter Logic
   const filteredNotes = notes.filter(note => {
     const matchesSearch =
       note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -50,7 +46,6 @@ const Dashboard = () => {
     return matchesSearch;
   });
 
-  // Sorting Logic
   const applySort = (notesList, sortOption) => {
     const sortedList = [...notesList];
     switch (sortOption) {
@@ -117,13 +112,10 @@ const Dashboard = () => {
       };
       setNotes([newNote, ...notes]);
     }
-
-    // Clear the entire draft back to empty defaults
     setEditorDraft(initialDraft);
   };
 
   const handleEditNote = note => {
-    // Load the note's data into the editor draft
     setEditorDraft({
       title: note.title,
       content: note.content,
@@ -140,26 +132,24 @@ const Dashboard = () => {
     );
   };
 
+  // Open the detailed Delete Modal
   const handleDeleteNote = id => {
-    if (editingId === id) {
-      setNoteToDeleteId(id);
-      setDeleteConflictOpen(true);
-    } else {
-      setNotes(notes.filter(note => note.id !== id));
+    setNoteToDelete(id);
+    setIsDeleteModalOpen(true);
+  };
+
+  // Handle the actual deletion after user confirms in the detailed modal
+  const handleDeleteConfirmed = () => {
+    // 1. Check if we are currently editing this note
+    if (editingId === noteToDelete) {
+      setEditingId(null);
+      setEditorDraft(initialDraft); // Reset editor completely
     }
-  };
-
-  const handleDeleteConflictConfirm = () => {
-    setEditingId(null);
-    setEditorDraft(initialDraft); // Reset draft fully on conflict delete
-    setNotes(notes.filter(note => note.id !== noteToDeleteId));
-    setDeleteConflictOpen(false);
-    setNoteToDeleteId(null);
-  };
-
-  const handleDeleteConflictCancel = () => {
-    setDeleteConflictOpen(false);
-    setNoteToDeleteId(null);
+    // 2. Delete the note from the main list
+    setNotes(notes.filter(note => note.id !== noteToDelete));
+    // 3. Close modal
+    setIsDeleteModalOpen(false);
+    setNoteToDelete(null);
   };
 
   const handleModalConfirm = () => {
@@ -195,7 +185,7 @@ const Dashboard = () => {
             textColor={textColor}
             setTextColor={setTextColor}
             tags={[]}
-            setTags={() => {}} // Kept to avoid breaking props if needed later
+            setTags={() => {}}
             onSave={handleSaveNote}
             isTyping={isTyping}
             isEditing={!!editingId}
@@ -219,6 +209,7 @@ const Dashboard = () => {
         </div>
       </div>
 
+      {/* Modal: Empty Description */}
       <ConfirmationModal
         isOpen={isModalOpen}
         onClose={handleModalCancel}
@@ -226,12 +217,13 @@ const Dashboard = () => {
         title="Empty Description"
         message="You haven't added any content. Proceed with a default description?"
       />
-      <ConfirmationModal
-        isOpen={deleteConflictOpen}
-        onClose={handleDeleteConflictCancel}
-        onConfirm={handleDeleteConflictConfirm}
-        title="Currently Editing This Note"
-        message="You are actively editing this note. If you delete it, the editor will reset."
+
+      {/* NEW: Detailed Delete Confirmation Modal */}
+      <DeleteConfirmationModal
+        isOpen={isDeleteModalOpen}
+        note={notes.find(n => n.id === noteToDelete)} // Find the specific note to pass details
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleDeleteConfirmed}
       />
     </div>
   );
