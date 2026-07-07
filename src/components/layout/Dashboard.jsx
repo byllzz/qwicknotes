@@ -4,32 +4,23 @@ import NotesList from '../features/NotesList/NotesList';
 import ConfirmationModal from '../common/ConfirmationModal';
 
 const Dashboard = () => {
-  // Main State
   const [notes, setNotes] = useState([]);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [color, setColor] = useState('#000000');
   const [tags, setTags] = useState([]);
-
-  // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Normal Save Logic
   const handleSaveNote = () => {
-    // If both are empty, do nothing
     if (!title.trim() && !content.trim()) return;
-
-    // If there is a title but NO content, trigger the popup
     if (title.trim() && !content.trim()) {
       setIsModalOpen(true);
       return;
     }
-
-    // Otherwise, save immediately (Both Title & Content exist)
     createAndSaveNote(content);
   };
 
-  // Function to handle the actual saving
   const createAndSaveNote = noteContent => {
     const newNote = {
       id: Date.now(),
@@ -39,29 +30,28 @@ const Dashboard = () => {
       tags: tags,
       createdAt: new Date().toISOString(),
     };
-
     setNotes([newNote, ...notes]);
-    // Clear the form
     setTitle('');
     setContent('');
     setTags([]);
   };
 
+  // NEW: Delete Logic
+  const handleDeleteNote = id => {
+    setNotes(notes.filter(note => note.id !== id));
+  };
+
   // Modal Handlers
   const handleModalConfirm = () => {
-    // User clicked Confirm - Save with a default sample description
     createAndSaveNote('No description provided.');
     setIsModalOpen(false);
   };
-
   const handleModalCancel = () => {
-    // User clicked Cancel - Close modal and keep the user's typed title
     setIsModalOpen(false);
   };
 
   return (
     <div className="flex flex-row w-full h-[calc(100vh-80px)] p-6 gap-6 overflow-hidden bg-gray-50">
-      {/* Left Panel: Note Creator */}
       <div className="w-[42%] min-w-[450px] h-full">
         <NoteEditor
           title={title}
@@ -76,12 +66,11 @@ const Dashboard = () => {
         />
       </div>
 
-      {/* Right Panel: Note Storage */}
+      {/* Pass the delete handler down to the list */}
       <div className="flex-1 h-full">
-        <NotesList notes={notes} />
+        <NotesList notes={notes} onDelete={handleDeleteNote} />
       </div>
 
-      {/* Render the Confirmation Modal */}
       <ConfirmationModal
         isOpen={isModalOpen}
         onClose={handleModalCancel}
