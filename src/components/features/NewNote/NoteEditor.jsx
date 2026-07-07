@@ -24,15 +24,15 @@ const NoteEditor = ({
   onSave,
   isTyping,
   isEditing,
+  isFavorite, // Receive star state
+  onToggleFavorite, // Receive star toggle function
 }) => {
   return (
-    /* Add conditional border and background color for Edit Mode */
     <div
       className={`bg-white rounded-xl shadow-sm border ${isEditing ? 'border-blue-400 border-2 bg-blue-50/20' : 'border-gray-100'} p-6 h-full flex flex-col relative transition-all duration-200`}
     >
       {/* Header & Star */}
       <div className="flex justify-between items-start mb-4">
-        {/* Change text dynamically based on mode */}
         <h2
           className={`text-2xl ${isEditing ? 'text-blue-600 font-medium' : 'text-gray-700 font-light'}`}
         >
@@ -44,13 +44,18 @@ const NoteEditor = ({
               ✏️ typing...
             </span>
           )}
-          <button className="text-gray-400 hover:text-gray-600 transition-colors">
-            <Star size={20} />
+
+          {/* Functional Star button in Editor */}
+          <button
+            onClick={onToggleFavorite}
+            className={`hover:scale-110 transition-transform ${isFavorite ? 'text-yellow-400' : 'text-gray-400 hover:text-gray-600'}`}
+          >
+            <Star size={20} fill={isFavorite ? 'currentColor' : 'none'} />
           </button>
         </div>
       </div>
 
-      {/* Title Input - Add highlight background */}
+      {/* Title Input */}
       <input
         type="text"
         value={title}

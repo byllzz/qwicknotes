@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Search } from 'lucide-react';
 import NoteEditor from '../features/NewNote/NoteEditor';
 import NotesList from '../features/NotesList/NotesList';
@@ -7,14 +7,16 @@ import useLocalStorage from '../../hooks/useLocalStorage';
 
 const Dashboard = () => {
   const [notes, setNotes] = useLocalStorage('qwicknotes_notes', []);
-  const [searchQuery, setSearchQuery] = useLocalStorage('qwicknotes_search', ''); // Persist Search
-  const [sortOption, setSortOption] = useLocalStorage('qwicknotes_sort', 'Newest First'); // Persist Sort
+  const [searchQuery, setSearchQuery] = useLocalStorage('qwicknotes_search', '');
+  const [sortOption, setSortOption] = useLocalStorage('qwicknotes_sort', 'Newest First');
+  const [showFavoritesOnly, setShowFavoritesOnly] = useLocalStorage('qwicknotes_show_favs', false); // Persist favorite filter
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [color, setColor] = useState('#000000');
   const [tags, setTags] = useState([]);
   const [editingId, setEditingId] = useState(null);
+  const [editorFavorite, setEditorFavorite] = useState(false); // State for the editor's star
 
   // Modal States
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -23,12 +25,16 @@ const Dashboard = () => {
 
   const isTyping = title.trim() !== '' || content.trim() !== '';
 
-  // Filter Logic
-  const filteredNotes = notes.filter(
-    note =>
+  // Filter Logic: Apply Search AND Favorite Filter
+  const filteredNotes = notes.filter(note => {
+    const matchesSearch =
       note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      note.content.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+      note.content.toLowerCase().includes(searchQuery.toLowerCase());
+    if (showFavoritesOnly) {
+      return matchesSearch && note.isFavorite === true;
+    }
+    return matchesSearch;
+  });
 
   // Sorting Logic
   const applySort = (notesList, sortOption) => {
@@ -77,7 +83,8 @@ const Dashboard = () => {
                 content: noteContent.trim(),
                 color,
                 tags,
-                updatedAt: new Date().toISOString(), // Update timestamp
+                isFavorite: editorFavorite, // Save the editor's star state
+                updatedAt: new Date().toISOString(),
               }
             : n,
         ),
@@ -90,15 +97,18 @@ const Dashboard = () => {
         content: noteContent.trim(),
         color,
         tags,
+        isFavorite: editorFavorite, // Save the editor's star state
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
       setNotes([newNote, ...notes]);
     }
 
+    // Reset all fields including editor star
     setTitle('');
     setContent('');
     setTags([]);
+    setEditorFavorite(false);
   };
 
   const handleEditNote = note => {
@@ -107,6 +117,14 @@ const Dashboard = () => {
     setColor(note.color);
     setTags(note.tags);
     setEditingId(note.id);
+    setEditorFavorite(note.isFavorite || false); // Sync the editor star with the note's favorite status
+  };
+
+  // Toggle favorite directly from the card
+  const handleToggleFavorite = id => {
+    setNotes(prevNotes =>
+      prevNotes.map(n => (n.id === id ? { ...n, isFavorite: !n.isFavorite } : n)),
+    );
   };
 
   const handleDeleteNote = id => {
@@ -122,6 +140,7 @@ const Dashboard = () => {
     setEditingId(null);
     setTitle('');
     setContent('');
+    setEditorFavorite(false); // Reset editor star on forced deletion
     setNotes(notes.filter(note => note.id !== noteToDeleteId));
     setDeleteConflictOpen(false);
     setNoteToDeleteId(null);
@@ -169,7 +188,8 @@ const Dashboard = () => {
             onSave={handleSaveNote}
             isTyping={isTyping}
             isEditing={!!editingId}
-            editingId={editingId}
+            isFavorite={editorFavorite} // Pass editor star state
+            onToggleFavorite={() => setEditorFavorite(!editorFavorite)} // Toggle editor star
           />
         </div>
 
@@ -177,12 +197,15 @@ const Dashboard = () => {
         <div className="flex-1 h-full">
           <NotesList
             notes={displayNotes}
-            rawNotes={filteredNotes} // pass raw to check length for empty state
+            rawNotes={filteredNotes}
             searchQuery={searchQuery}
             sortOption={sortOption}
             setSortOption={setSortOption}
+            showFavoritesOnly={showFavoritesOnly}
+            setShowFavoritesOnly={setShowFavoritesOnly}
             onEdit={handleEditNote}
             onDelete={handleDeleteNote}
+            onToggleFavorite={handleToggleFavorite} // Pass card star toggle
           />
         </div>
       </div>

@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Star, ArrowDownUp, Download, FileText } from 'lucide-react';
 import NoteCard from './NoteCard';
 
@@ -18,13 +18,15 @@ const NotesList = ({
   searchQuery,
   sortOption,
   setSortOption,
+  showFavoritesOnly,
+  setShowFavoritesOnly,
   onEdit,
   onDelete,
+  onToggleFavorite,
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  // Close dropdown if clicked outside
   useEffect(() => {
     const handleClickOutside = event => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -35,7 +37,6 @@ const NotesList = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Check if it's a search with 0 results
   const isSearchingEmpty = searchQuery.trim() !== '' && notes.length === 0;
 
   return (
@@ -46,11 +47,16 @@ const NotesList = ({
         </span>
 
         <div className="flex items-center gap-4 text-sm text-gray-500">
-          <button className="hover:text-gray-800">
-            <Star size={18} />
+          {/* NEW: Favorites Filter Button with Label */}
+          <button
+            onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+            className={`flex items-center gap-1.5 hover:text-gray-800 transition-colors ${showFavoritesOnly ? 'text-yellow-500' : 'text-gray-500'}`}
+          >
+            <Star size={18} className={showFavoritesOnly ? 'fill-yellow-400' : ''} />
+            <span className="font-medium">Favorites</span>
           </button>
 
-          {/* Dropdown Trigger & Menu */}
+          {/* Sort Dropdown */}
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setIsDropdownOpen(!isDropdownOpen)}
@@ -91,7 +97,6 @@ const NotesList = ({
               <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-8 h-6 border-2 border-gray-200 bg-white"></div>
             </div>
 
-            {/* Conditionally render based on search state */}
             {isSearchingEmpty ? (
               <>
                 <p className="text-gray-400 font-medium text-base">No matching notes found</p>
@@ -107,9 +112,9 @@ const NotesList = ({
               <NoteCard
                 key={note.id}
                 note={note}
-                onClick={() => {}} // We don't use this here anymore, we use actions
                 onEdit={onEdit}
                 onDelete={onDelete}
+                onToggleFavorite={onToggleFavorite} // Pass favorite toggle down
               />
             ))}
           </div>
