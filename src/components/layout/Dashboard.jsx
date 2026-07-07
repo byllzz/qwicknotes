@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { Search } from 'lucide-react';
 import NoteEditor from '../features/NewNote/NoteEditor';
 import NotesList from '../features/NotesList/NotesList';
@@ -9,34 +9,31 @@ const Dashboard = () => {
   const [notes, setNotes] = useLocalStorage('qwicknotes_notes', []);
   const [searchQuery, setSearchQuery] = useLocalStorage('qwicknotes_search', '');
   const [sortOption, setSortOption] = useLocalStorage('qwicknotes_sort', 'Newest First');
-  const [showFavoritesOnly, setShowFavoritesOnly] = useLocalStorage('qwicknotes_show_favs', false); // Persist favorite filter
+  const [showFavoritesOnly, setShowFavoritesOnly] = useLocalStorage('qwicknotes_show_favs', false);
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
-  const [color, setColor] = useState('#000000');
+  const [borderColor, setBorderColor] = useState('#000000'); // Renamed for clarity
+  const [bgColor, setBgColor] = useState(''); // Empty = transparent
+  const [textColor, setTextColor] = useState('#1f2937'); // Default dark gray
   const [tags, setTags] = useState([]);
   const [editingId, setEditingId] = useState(null);
-  const [editorFavorite, setEditorFavorite] = useState(false); // State for the editor's star
+  const [editorFavorite, setEditorFavorite] = useState(false);
 
-  // Modal States
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deleteConflictOpen, setDeleteConflictOpen] = useState(false);
   const [noteToDeleteId, setNoteToDeleteId] = useState(null);
 
   const isTyping = title.trim() !== '' || content.trim() !== '';
 
-  // Filter Logic: Apply Search AND Favorite Filter
   const filteredNotes = notes.filter(note => {
     const matchesSearch =
       note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       note.content.toLowerCase().includes(searchQuery.toLowerCase());
-    if (showFavoritesOnly) {
-      return matchesSearch && note.isFavorite === true;
-    }
+    if (showFavoritesOnly) return matchesSearch && note.isFavorite === true;
     return matchesSearch;
   });
 
-  // Sorting Logic
   const applySort = (notesList, sortOption) => {
     const sortedList = [...notesList];
     switch (sortOption) {
@@ -81,9 +78,11 @@ const Dashboard = () => {
                 ...n,
                 title: title.trim() || 'Untitled',
                 content: noteContent.trim(),
-                color,
+                borderColor,
+                bgColor,
+                textColor, // Save colors
                 tags,
-                isFavorite: editorFavorite, // Save the editor's star state
+                isFavorite: editorFavorite,
                 updatedAt: new Date().toISOString(),
               }
             : n,
@@ -95,32 +94,38 @@ const Dashboard = () => {
         id: Date.now(),
         title: title.trim() || 'Untitled',
         content: noteContent.trim(),
-        color,
+        borderColor,
+        bgColor,
+        textColor, // Save colors
         tags,
-        isFavorite: editorFavorite, // Save the editor's star state
+        isFavorite: editorFavorite,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
       setNotes([newNote, ...notes]);
     }
 
-    // Reset all fields including editor star
+    // Reset all fields
     setTitle('');
     setContent('');
     setTags([]);
+    setBorderColor('#000000'); // Reset to default black
+    setBgColor(''); // Reset transparent
+    setTextColor('#1f2937'); // Reset default dark text
     setEditorFavorite(false);
   };
 
   const handleEditNote = note => {
     setTitle(note.title);
     setContent(note.content);
-    setColor(note.color);
+    setBorderColor(note.borderColor || '#000000');
+    setBgColor(note.bgColor || '');
+    setTextColor(note.textColor || '#1f2937');
     setTags(note.tags);
     setEditingId(note.id);
-    setEditorFavorite(note.isFavorite || false); // Sync the editor star with the note's favorite status
+    setEditorFavorite(note.isFavorite || false);
   };
 
-  // Toggle favorite directly from the card
   const handleToggleFavorite = id => {
     setNotes(prevNotes =>
       prevNotes.map(n => (n.id === id ? { ...n, isFavorite: !n.isFavorite } : n)),
@@ -140,7 +145,10 @@ const Dashboard = () => {
     setEditingId(null);
     setTitle('');
     setContent('');
-    setEditorFavorite(false); // Reset editor star on forced deletion
+    setBorderColor('#000000');
+    setBgColor('');
+    setTextColor('#1f2937');
+    setEditorFavorite(false);
     setNotes(notes.filter(note => note.id !== noteToDeleteId));
     setDeleteConflictOpen(false);
     setNoteToDeleteId(null);
@@ -161,7 +169,6 @@ const Dashboard = () => {
 
   return (
     <div className="flex flex-col w-full h-[calc(100vh-80px)] p-6 gap-4 bg-gray-50 overflow-hidden">
-      {/* Top Search Bar */}
       <div className="w-full bg-white rounded-xl shadow-sm border border-gray-100 px-4 py-3 flex items-center">
         <Search size={18} className="text-gray-400 mr-3" />
         <input
@@ -174,26 +181,27 @@ const Dashboard = () => {
       </div>
 
       <div className="flex flex-row w-full h-full gap-6 overflow-hidden">
-        {/* Left Panel */}
         <div className="w-[42%] min-w-[450px] h-full">
           <NoteEditor
             title={title}
             setTitle={setTitle}
             content={content}
             setContent={setContent}
-            color={color}
-            setColor={setColor}
+            borderColor={borderColor}
+            setBorderColor={setBorderColor}
+            bgColor={bgColor}
+            setBgColor={setBgColor}
+            textColor={textColor}
+            setTextColor={setTextColor}
             tags={tags}
             setTags={setTags}
             onSave={handleSaveNote}
             isTyping={isTyping}
             isEditing={!!editingId}
-            isFavorite={editorFavorite} // Pass editor star state
-            onToggleFavorite={() => setEditorFavorite(!editorFavorite)} // Toggle editor star
+            isFavorite={editorFavorite}
+            onToggleFavorite={() => setEditorFavorite(!editorFavorite)}
           />
         </div>
-
-        {/* Right Panel */}
         <div className="flex-1 h-full">
           <NotesList
             notes={displayNotes}
@@ -205,12 +213,11 @@ const Dashboard = () => {
             setShowFavoritesOnly={setShowFavoritesOnly}
             onEdit={handleEditNote}
             onDelete={handleDeleteNote}
-            onToggleFavorite={handleToggleFavorite} // Pass card star toggle
+            onToggleFavorite={handleToggleFavorite}
           />
         </div>
       </div>
 
-      {/* Modals */}
       <ConfirmationModal
         isOpen={isModalOpen}
         onClose={handleModalCancel}

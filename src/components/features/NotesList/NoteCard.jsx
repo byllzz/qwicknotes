@@ -22,9 +22,14 @@ const NoteCard = ({ note, onEdit, onDelete, onToggleFavorite }) => {
   const dateLabel = note.updatedAt && note.updatedAt !== note.createdAt ? 'Updated' : 'Created';
 
   return (
-    <div className="group bg-white rounded-xl shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] border border-gray-200 p-4 hover:shadow-md cursor-pointer transition-all flex flex-col justify-between gap-2">
+    <div
+      className="group bg-white rounded-xl shadow-[0_2px_10px_-3px_rgba(0,0,0,0.05)] border border-gray-200 p-4 hover:shadow-md cursor-pointer transition-all flex flex-col justify-between gap-2"
+      style={{
+        backgroundColor: note.bgColor || '#ffffff',
+        color: note.textColor || '#1f2937',
+      }}
+    >
       <div className="flex items-start gap-3">
-        {/* Functional Star for NoteCard */}
         <button
           onClick={e => {
             e.stopPropagation();
@@ -36,13 +41,15 @@ const NoteCard = ({ note, onEdit, onDelete, onToggleFavorite }) => {
         </button>
 
         <div className="flex-1 min-w-0">
-          <h4 className="text-base font-medium text-gray-800 truncate">{note.title}</h4>
-          <p className="text-sm text-gray-500 line-clamp-2 mt-1">{note.content}</p>
+          <h4 className="text-base font-medium truncate">{note.title}</h4>
+          <p className="text-sm opacity-80 line-clamp-2 mt-1">{note.content}</p>
         </div>
       </div>
 
-      <div className="flex justify-between items-center mt-3 pt-3 border-t border-gray-50">
-        <div className="flex items-center gap-1.5 text-[10px] text-gray-400 font-medium">
+      <div
+        className={`flex justify-between items-center mt-3 pt-3 ${note.textColor ? `border-t border-black/10` : 'border-t border-gray-200'}`}
+      >
+        <div className="flex items-center gap-1.5 text-[10px] font-medium opacity-70">
           <Clock size={12} /> {dateLabel} {formatDateTime(displayDate)}
         </div>
         <div
@@ -51,14 +58,14 @@ const NoteCard = ({ note, onEdit, onDelete, onToggleFavorite }) => {
         >
           <button
             onClick={() => onEdit(note)}
-            className="text-gray-400 hover:text-gray-700 flex items-center gap-1"
+            className="hover:opacity-100 opacity-70 flex items-center gap-1 transition-opacity"
           >
             <Pencil size={11} /> Edit
           </button>
-          <span className="text-gray-300 font-normal text-[10px]">{sizeLabel}</span>
+          <span className="opacity-50 font-normal text-[10px]">{sizeLabel}</span>
           <button
             onClick={() => onDelete(note.id)}
-            className="text-red-400 hover:text-red-600 flex items-center gap-1"
+            className="text-red-400 hover:text-red-600 flex items-center gap-1 transition-colors"
           >
             <Trash2 size={11} /> Delete
           </button>

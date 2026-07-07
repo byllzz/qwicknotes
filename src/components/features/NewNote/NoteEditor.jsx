@@ -1,3 +1,4 @@
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Star,
   Bold,
@@ -10,23 +11,78 @@ import {
   Quote,
   Undo,
   Redo,
+  ChevronDown,
+  Check,
 } from 'lucide-react';
+
+// Predefined Palettes
+const BG_COLORS = [
+  { label: 'Default', value: '' },
+  { label: 'White', value: '#ffffff' },
+  { label: 'Light Gray', value: '#f3f4f6' },
+  { label: 'Yellow', value: '#fef9c3' },
+  { label: 'Blue', value: '#dbeafe' },
+  { label: 'Red', value: '#fee2e2' },
+  { label: 'Green', value: '#dcfce7' },
+  { label: 'Purple', value: '#f3e8ff' },
+];
+
+const TEXT_COLORS = [
+  { label: 'Black', value: '#1f2937' },
+  { label: 'White', value: '#ffffff' },
+  { label: 'Gray', value: '#6b7280' },
+  { label: 'Blue', value: '#2563eb' },
+  { label: 'Red', value: '#dc2626' },
+  { label: 'Green', value: '#16a34a' },
+];
 
 const NoteEditor = ({
   title,
   setTitle,
   content,
   setContent,
-  color,
-  setColor,
+  borderColor,
+  setBorderColor,
+  bgColor,
+  setBgColor,
+  textColor,
+  setTextColor,
   tags,
   setTags,
   onSave,
   isTyping,
   isEditing,
-  isFavorite, // Receive star state
-  onToggleFavorite, // Receive star toggle function
+  isFavorite,
+  onToggleFavorite,
 }) => {
+  const [showPicker, setShowPicker] = useState(false);
+  const pickerRef = useRef(null);
+
+  // Close picker when clicking outside
+  useEffect(() => {
+    const handleClickOutside = event => {
+      if (pickerRef.current && !pickerRef.current.contains(event.target)) {
+        setShowPicker(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleSelectBG = value => {
+    setBgColor(value);
+    setShowPicker(false);
+  };
+
+  const handleSelectText = value => {
+    setTextColor(value);
+    setShowPicker(false);
+  };
+
+  // Determine label to show on the button
+  const currentBGLabel = BG_COLORS.find(c => c.value === bgColor)?.label || 'Default';
+  const currentTextLabel = TEXT_COLORS.find(c => c.value === textColor)?.label || 'Black';
+
   return (
     <div
       className={`bg-white rounded-xl shadow-sm border ${isEditing ? 'border-blue-400 border-2 bg-blue-50/20' : 'border-gray-100'} p-6 h-full flex flex-col relative transition-all duration-200`}
@@ -44,8 +100,6 @@ const NoteEditor = ({
               ✏️ typing...
             </span>
           )}
-
-          {/* Functional Star button in Editor */}
           <button
             onClick={onToggleFavorite}
             className={`hover:scale-110 transition-transform ${isFavorite ? 'text-yellow-400' : 'text-gray-400 hover:text-gray-600'}`}
@@ -64,33 +118,101 @@ const NoteEditor = ({
         className={`w-full text-lg font-medium text-gray-800 placeholder-gray-300 bg-transparent border-b pb-2 mb-6 focus:outline-none focus:border-gray-400 transition-colors ${isEditing ? 'border-blue-400' : 'border-gray-200'}`}
       />
 
-      {/* Color Slider */}
-      <div className="flex items-center gap-4 mb-6">
+      {/* Border Color Slider */}
+      <div className="flex items-center gap-4 mb-4">
+        <span className="text-xs text-gray-500 font-medium">Accent Color</span>
         <input
           type="range"
           min="#000000"
           max="#ffffff"
-          value={color}
-          onChange={e => setColor(e.target.value)}
-          className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-black"
+          value={borderColor}
+          onChange={e => setBorderColor(e.target.value)}
+          className="flex-1 h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-black"
         />
         <div
-          className="w-6 h-6 rounded-full border border-gray-300"
-          style={{ backgroundColor: color }}
+          className="w-5 h-5 rounded-full border border-gray-200"
+          style={{ backgroundColor: borderColor }}
         ></div>
       </div>
 
-      {/* Tags Section */}
-      <div className="mb-6">
-        <button className="text-gray-500 text-sm flex items-center gap-1 mb-2 hover:text-gray-700 transition-colors">
-          <span className="rotate-45 text-lg font-light">+</span> Add Tags
+      {/* Color Style Picker (Replaces Tags Section) */}
+      <div className="relative mb-4" ref={pickerRef}>
+        <span className="text-xs text-gray-500 font-medium block mb-1.5">Card Style</span>
+        <button
+          onClick={() => setShowPicker(!showPicker)}
+          className="flex items-center gap-2 px-3 py-2 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-lg text-sm transition-colors"
+        >
+          <span className="flex items-center gap-1.5">
+            <span
+              className="w-4 h-4 rounded-full border border-gray-300"
+              style={{ backgroundColor: bgColor || '#ffffff' }}
+            ></span>
+            <span className="text-gray-700">BG: {currentBGLabel}</span>
+          </span>
+          <span className="text-gray-300">|</span>
+          <span className="flex items-center gap-1.5">
+            <span className="text-[10px]" style={{ color: textColor }}>
+              Aa
+            </span>
+            <span className="text-gray-700">Text: {currentTextLabel}</span>
+          </span>
+          <ChevronDown size={14} className="text-gray-400 ml-1" />
         </button>
-        <div className="flex items-center gap-2">
-          <div className="flex items-center px-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs text-gray-500">
-            <div className="w-3 h-3 rounded-full border border-gray-400 mr-2"></div>
-            None
+
+        {/* The Popup */}
+        {showPicker && (
+          <div className="absolute top-12 left-0 z-20 bg-white border border-gray-200 rounded-xl shadow-xl p-4 w-64 flex flex-col gap-3 animate-in fade-in zoom-in-95 duration-100">
+            <div>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                Background
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {BG_COLORS.map(c => (
+                  <button
+                    key={c.label}
+                    onClick={() => handleSelectBG(c.value)}
+                    className={`w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center transition-all hover:scale-110 ${bgColor === c.value ? 'ring-2 ring-black ring-offset-1' : ''}`}
+                    style={{ backgroundColor: c.value || '#ffffff' }}
+                    title={c.label}
+                  >
+                    {c.value === '' && <span className="text-[8px] text-gray-400">∅</span>}
+                    {bgColor === c.value && (
+                      <Check
+                        size={10}
+                        className={
+                          c.value === '' || c.value === '#ffffff' ? 'text-black' : 'text-white'
+                        }
+                      />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="w-full h-px bg-gray-100 my-1"></div>
+
+            <div>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
+                Text Color
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {TEXT_COLORS.map(c => (
+                  <button
+                    key={c.label}
+                    onClick={() => handleSelectText(c.value)}
+                    className={`w-7 h-7 rounded-full border border-gray-200 flex items-center justify-center transition-all hover:scale-110 ${textColor === c.value ? 'ring-2 ring-black ring-offset-1' : ''}`}
+                    style={{ backgroundColor: c.value }}
+                    title={c.label}
+                  >
+                    <span className="text-[10px] font-bold text-white mix-blend-difference">
+                      Aa
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Rich Text Toolbar */}
