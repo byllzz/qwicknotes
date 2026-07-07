@@ -13,14 +13,22 @@ const Dashboard = () => {
   const [tags, setTags] = useState([]);
   const [editingId, setEditingId] = useState(null);
 
-  // Modal State 1: Empty Description Popup
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  // Search State
+  const [searchQuery, setSearchQuery] = useState('');
 
-  // Modal State 2: Delete Conflict Popup
+  // Modal States
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [deleteConflictOpen, setDeleteConflictOpen] = useState(false);
   const [noteToDeleteId, setNoteToDeleteId] = useState(null);
 
   const isTyping = title.trim() !== '' || content.trim() !== '';
+
+  // Filter Logic: Search in both Title and Content (Case insensitive)
+  const filteredNotes = notes.filter(
+    note =>
+      note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      note.content.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
 
   const handleSaveNote = () => {
     if (!title.trim() && !content.trim()) return;
@@ -66,10 +74,8 @@ const Dashboard = () => {
     setEditingId(note.id);
   };
 
-  // UPDATED: Delete handler with Conflict Check
   const handleDeleteNote = id => {
     if (editingId === id) {
-      // Trigger the Conflict Popup if deleting the currently edited note
       setNoteToDeleteId(id);
       setDeleteConflictOpen(true);
     } else {
@@ -77,15 +83,11 @@ const Dashboard = () => {
     }
   };
 
-  // Confirm delete while editing
   const handleDeleteConflictConfirm = () => {
-    // 1. Reset the left panel
     setEditingId(null);
     setTitle('');
     setContent('');
-    // 2. Delete the note
     setNotes(notes.filter(note => note.id !== noteToDeleteId));
-    // 3. Close modal
     setDeleteConflictOpen(false);
     setNoteToDeleteId(null);
   };
@@ -95,7 +97,6 @@ const Dashboard = () => {
     setNoteToDeleteId(null);
   };
 
-  // Modal Handlers (Empty desc)
   const handleModalConfirm = () => {
     createAndSaveNote('No description provided.');
     setIsModalOpen(false);
@@ -106,10 +107,13 @@ const Dashboard = () => {
 
   return (
     <div className="flex flex-col w-full h-[calc(100vh-80px)] p-6 gap-4 bg-gray-50 overflow-hidden">
+      {/* Top Search Bar with logic attached */}
       <div className="w-full bg-white rounded-xl shadow-sm border border-gray-100 px-4 py-3 flex items-center">
         <Search size={18} className="text-gray-400 mr-3" />
         <input
           type="text"
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
           placeholder="Search in titles and content..."
           className="w-full outline-none text-sm text-gray-700 placeholder-gray-400 bg-transparent"
         />
@@ -134,13 +138,13 @@ const Dashboard = () => {
           />
         </div>
 
-        {/* Right Panel */}
+        {/* Right Panel - Pass filteredNotes instead of notes */}
         <div className="flex-1 h-full">
-          <NotesList notes={notes} onEdit={handleEditNote} onDelete={handleDeleteNote} />
+          <NotesList notes={filteredNotes} onEdit={handleEditNote} onDelete={handleDeleteNote} />
         </div>
       </div>
 
-      {/* Modal: Empty Description */}
+      {/* Modals */}
       <ConfirmationModal
         isOpen={isModalOpen}
         onClose={handleModalCancel}
@@ -148,14 +152,12 @@ const Dashboard = () => {
         title="Empty Description"
         message="You haven't added any content to this note. Proceed with a default description?"
       />
-
-      {/* NEW Modal: Delete Conflict */}
       <ConfirmationModal
         isOpen={deleteConflictOpen}
         onClose={handleDeleteConflictCancel}
         onConfirm={handleDeleteConflictConfirm}
         title="Currently Editing This Note"
-        message="You are actively editing this note in the left panel. If you delete it now, the editor will reset to a new note. Are you sure you want to delete it?"
+        message="You are actively editing this note. If you delete it, the editor will reset."
       />
     </div>
   );
