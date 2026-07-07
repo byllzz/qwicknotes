@@ -5,20 +5,35 @@ import NotesList from '../features/NotesList/NotesList';
 import ConfirmationModal from '../common/ConfirmationModal';
 import useLocalStorage from '../../hooks/useLocalStorage';
 
+// Default draft state if nothing is in localstorage yet
+const initialDraft = {
+  title: '',
+  content: '',
+  bgColor: '',
+  textColor: '#1f2937',
+  editorFavorite: false,
+};
+
 const Dashboard = () => {
   const [notes, setNotes] = useLocalStorage('qwicknotes_notes', []);
   const [searchQuery, setSearchQuery] = useLocalStorage('qwicknotes_search', '');
   const [sortOption, setSortOption] = useLocalStorage('qwicknotes_sort', 'Newest First');
   const [showFavoritesOnly, setShowFavoritesOnly] = useLocalStorage('qwicknotes_show_favs', false);
 
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
-  const [borderColor, setBorderColor] = useState('#000000'); // Renamed for clarity
-  const [bgColor, setBgColor] = useState(''); // Empty = transparent
-  const [textColor, setTextColor] = useState('#1f2937'); // Default dark gray
-  const [tags, setTags] = useState([]);
+  // Persist the ENTIRE left panel draft state
+  const [editorDraft, setEditorDraft] = useLocalStorage('qwicknotes_editor_draft', initialDraft);
+
+  // Destructure the draft for the props expected by NoteEditor
+  const { title, content, bgColor, textColor, editorFavorite } = editorDraft;
+
+  // Create wrapper setters that update the draft object in localStorage
+  const setTitle = val => setEditorDraft(prev => ({ ...prev, title: val }));
+  const setContent = val => setEditorDraft(prev => ({ ...prev, content: val }));
+  const setBgColor = val => setEditorDraft(prev => ({ ...prev, bgColor: val }));
+  const setTextColor = val => setEditorDraft(prev => ({ ...prev, textColor: val }));
+  const setEditorFavorite = val => setEditorDraft(prev => ({ ...prev, editorFavorite: val }));
+
   const [editingId, setEditingId] = useState(null);
-  const [editorFavorite, setEditorFavorite] = useState(false);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deleteConflictOpen, setDeleteConflictOpen] = useState(false);
@@ -26,6 +41,7 @@ const Dashboard = () => {
 
   const isTyping = title.trim() !== '' || content.trim() !== '';
 
+  // Filter Logic
   const filteredNotes = notes.filter(note => {
     const matchesSearch =
       note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -34,6 +50,7 @@ const Dashboard = () => {
     return matchesSearch;
   });
 
+  // Sorting Logic
   const applySort = (notesList, sortOption) => {
     const sortedList = [...notesList];
     switch (sortOption) {
@@ -78,10 +95,8 @@ const Dashboard = () => {
                 ...n,
                 title: title.trim() || 'Untitled',
                 content: noteContent.trim(),
-                borderColor,
                 bgColor,
-                textColor, // Save colors
-                tags,
+                textColor,
                 isFavorite: editorFavorite,
                 updatedAt: new Date().toISOString(),
               }
@@ -94,10 +109,8 @@ const Dashboard = () => {
         id: Date.now(),
         title: title.trim() || 'Untitled',
         content: noteContent.trim(),
-        borderColor,
         bgColor,
-        textColor, // Save colors
-        tags,
+        textColor,
         isFavorite: editorFavorite,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -105,25 +118,20 @@ const Dashboard = () => {
       setNotes([newNote, ...notes]);
     }
 
-    // Reset all fields
-    setTitle('');
-    setContent('');
-    setTags([]);
-    setBorderColor('#000000'); // Reset to default black
-    setBgColor(''); // Reset transparent
-    setTextColor('#1f2937'); // Reset default dark text
-    setEditorFavorite(false);
+    // Clear the entire draft back to empty defaults
+    setEditorDraft(initialDraft);
   };
 
   const handleEditNote = note => {
-    setTitle(note.title);
-    setContent(note.content);
-    setBorderColor(note.borderColor || '#000000');
-    setBgColor(note.bgColor || '');
-    setTextColor(note.textColor || '#1f2937');
-    setTags(note.tags);
+    // Load the note's data into the editor draft
+    setEditorDraft({
+      title: note.title,
+      content: note.content,
+      bgColor: note.bgColor || '',
+      textColor: note.textColor || '#1f2937',
+      editorFavorite: note.isFavorite || false,
+    });
     setEditingId(note.id);
-    setEditorFavorite(note.isFavorite || false);
   };
 
   const handleToggleFavorite = id => {
@@ -143,12 +151,7 @@ const Dashboard = () => {
 
   const handleDeleteConflictConfirm = () => {
     setEditingId(null);
-    setTitle('');
-    setContent('');
-    setBorderColor('#000000');
-    setBgColor('');
-    setTextColor('#1f2937');
-    setEditorFavorite(false);
+    setEditorDraft(initialDraft); // Reset draft fully on conflict delete
     setNotes(notes.filter(note => note.id !== noteToDeleteId));
     setDeleteConflictOpen(false);
     setNoteToDeleteId(null);
@@ -187,14 +190,12 @@ const Dashboard = () => {
             setTitle={setTitle}
             content={content}
             setContent={setContent}
-            borderColor={borderColor}
-            setBorderColor={setBorderColor}
             bgColor={bgColor}
             setBgColor={setBgColor}
             textColor={textColor}
             setTextColor={setTextColor}
-            tags={tags}
-            setTags={setTags}
+            tags={[]}
+            setTags={() => {}} // Kept to avoid breaking props if needed later
             onSave={handleSaveNote}
             isTyping={isTyping}
             isEditing={!!editingId}
