@@ -1,4 +1,3 @@
-import React from 'react';
 import { Clock, Trash2 } from 'lucide-react';
 
 const stripHtml = html => (html ? html.replace(/<[^>]*>/g, '') : '');

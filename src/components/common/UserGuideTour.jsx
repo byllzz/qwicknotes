@@ -1,15 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 
 const steps = [
   {
     target: '.header-logo',
     title: 'Welcome to QwickNotes!',
     description: 'This is your digital notebook. All your notes are stored locally on your device.',
-  },
-  {
-    target: '.theme-toggle',
-    title: 'Switch Themes',
-    description: 'Toggle between Light and Dark modes. Your preference is saved automatically.',
   },
   {
     target: '.search-input',
@@ -43,13 +38,21 @@ const UserGuideTour = ({ isOpen, onClose, onFinish }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [targetRect, setTargetRect] = useState(null);
   const [popupPos, setPopupPos] = useState({ top: 0, left: 0 });
+  const finishingRef = useRef(false); // prevent double-call
+
+  // Reset step when tour closes
+  useEffect(() => {
+    if (!isOpen) {
+      setCurrentStep(0);
+      finishingRef.current = false;
+    }
+  }, [isOpen]);
 
   const calculatePopupPosition = rect => {
     if (!rect) return { top: 0, left: 0 };
     const popupWidth = 320;
     const popupHeight = 180;
     let top, left;
-    // Try placing below; if not enough space, place above
     if (rect.bottom + popupHeight + 20 < window.innerHeight) {
       top = rect.bottom + 16;
     } else {
@@ -67,12 +70,10 @@ const UserGuideTour = ({ isOpen, onClose, onFinish }) => {
       setTargetRect(rect);
       setPopupPos(calculatePopupPosition(rect));
     } else {
-      // Retry after a short delay (DOM might not be ready)
       setTimeout(updateTarget, 100);
     }
   };
 
-  // Update target when step changes or window resizes
   useEffect(() => {
     if (isOpen) {
       updateTarget();
@@ -86,17 +87,28 @@ const UserGuideTour = ({ isOpen, onClose, onFinish }) => {
     }
   }, [isOpen, currentStep]);
 
-  // Enter key to advance
+  // Enter key handler
   useEffect(() => {
     const handleKeyDown = e => {
       if (e.key === 'Enter') {
+        // Ignore if typing in an input/textarea
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+        e.preventDefault(); // prevent any default action
+        e.stopPropagation();
+
+        // Prevent double‑finish
+        if (finishingRef.current) return;
+
         if (currentStep < steps.length - 1) {
           setCurrentStep(currentStep + 1);
         } else {
-          onFinish();
+          finishingRef.current = true;
+          onFinish(); // this closes the tour
         }
       }
     };
+
     if (isOpen) {
       document.addEventListener('keydown', handleKeyDown);
       return () => document.removeEventListener('keydown', handleKeyDown);
@@ -107,7 +119,7 @@ const UserGuideTour = ({ isOpen, onClose, onFinish }) => {
 
   return (
     <div className="fixed inset-0 z-[9999] pointer-events-none">
-      {/* Dark overlay with a cutout highlight */}
+      {/* Overlay with cutout */}
       <div
         className="absolute inset-0 bg-black/60"
         style={{
@@ -117,7 +129,7 @@ const UserGuideTour = ({ isOpen, onClose, onFinish }) => {
         }}
       />
 
-      {/* Highlight border around the target */}
+      {/* Highlight border */}
       {targetRect && (
         <div
           className="absolute border-2 border-white rounded-lg pointer-events-none"
@@ -132,7 +144,7 @@ const UserGuideTour = ({ isOpen, onClose, onFinish }) => {
         />
       )}
 
-      {/* Popup card */}
+      {/* Popup */}
       {targetRect && (
         <div
           className="absolute pointer-events-auto bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-5 max-w-[320px] transition-all duration-300"
@@ -166,9 +178,11 @@ const UserGuideTour = ({ isOpen, onClose, onFinish }) => {
             )}
             <button
               onClick={() => {
+                if (finishingRef.current) return;
                 if (currentStep < steps.length - 1) {
                   setCurrentStep(currentStep + 1);
                 } else {
+                  finishingRef.current = true;
                   onFinish();
                 }
               }}

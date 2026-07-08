@@ -1,35 +1,34 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Header from './components/layout/Header';
 import Dashboard from './components/layout/Dashboard';
-import LandingPage from './pages/LandingPage';
+import AboutModal from './components/common/AboutModal';
+import UserGuideTour from './components/common/UserGuideTour';
 
 function App() {
-  // 'landing' | 'app'
-  const [view, setView] = useState(() => {
-    // If user has visited before, go straight to app
-    return sessionStorage.getItem('qwicknotes_visited') ? 'app' : 'landing';
-  });
+  const [isAboutOpen, setIsAboutOpen] = useState(false);
+  const [isTourOpen, setIsTourOpen] = useState(false);
 
-  // Controls whether Dashboard should immediately open the tour
-  const [startWithTour, setStartWithTour] = useState(false);
+  useEffect(() => {
+    const hasSeenTour = sessionStorage.getItem('qwicknotes_tour_seen');
+    if (!hasSeenTour) {
+      const timer = setTimeout(() => setIsTourOpen(true), 300);
+      return () => clearTimeout(timer);
+    }
+  }, []);
 
-  const handleStartFromLanding = () => {
-    sessionStorage.setItem('qwicknotes_visited', 'true');
-    setStartWithTour(true);
-    setView('app');
+  const handleTourFinish = () => {
+    setIsTourOpen(false);
+    sessionStorage.setItem('qwicknotes_tour_seen', 'true');
   };
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col items-center m-0 font-sans text-gray-800 dark:text-gray-200 transition-colors duration-200">
-      <Header />
-
-      {view === 'landing' ? (
-        <LandingPage onStart={handleStartFromLanding} />
-      ) : (
-        <div className="w-full max-w-[1300px] transition-colors duration-200">
-          <Dashboard autoStartTour={startWithTour} />
-        </div>
-      )}
+      <Header onOpenAbout={() => setIsAboutOpen(true)} onOpenTour={() => setIsTourOpen(true)} />
+      <div className="w-full max-w-[1300px] transition-colors duration-200">
+        <Dashboard />
+      </div>
+      <AboutModal isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)} />
+      <UserGuideTour isOpen={isTourOpen} onClose={handleTourFinish} onFinish={handleTourFinish} />
     </div>
   );
 }

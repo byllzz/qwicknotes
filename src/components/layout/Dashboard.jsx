@@ -1,248 +1,53 @@
-import React, { useState, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import NoteEditor from '../features/NewNote/NoteEditor';
 import NotesList from '../features/NotesList/NotesList';
 import ConfirmationModal from '../common/ConfirmationModal';
 import DeleteConfirmationModal from '../common/DeleteConfirmationModal';
-import UserGuideTour from '../common/UserGuideTour';
-import useLocalStorage from '../../hooks/useLocalStorage';
+import useNotes from '../../hooks/useNotes';
 
-const initialDraft = {
-  title: '',
-  content: '',
-  bgColor: '',
-  textColor: '#1f2937',
-  editorFavorite: false,
-  tags: [],
-};
-
-// autoStartTour: passed from App when user clicks "Start creating notes" on landing page
-const Dashboard = ({ autoStartTour = false }) => {
-  const [notes, setNotes] = useLocalStorage('qwicknotes_notes', []);
-  const [searchQuery, setSearchQuery] = useLocalStorage('qwicknotes_search', '');
-  const [sortOption, setSortOption] = useLocalStorage('qwicknotes_sort', 'Newest First');
-  const [showFavoritesOnly, setShowFavoritesOnly] = useLocalStorage('qwicknotes_show_favs', false);
-  const [filterTag, setFilterTag] = useLocalStorage('qwicknotes_filter_tag', null);
-  const [allTags, setAllTags] = useLocalStorage('qwicknotes_all_tags', ['Work', 'Personal']);
-  const [editorDraft, setEditorDraft] = useLocalStorage('qwicknotes_editor_draft', initialDraft);
-
-  // Tour state
-  const [showTour, setShowTour] = useState(false);
-
-  useEffect(() => {
-    if (autoStartTour) {
-      // Small delay so the DOM is fully rendered before the tour tries to find elements
-      const timer = setTimeout(() => setShowTour(true), 300);
-      return () => clearTimeout(timer);
-    } else if (!sessionStorage.getItem('qwicknotes_tour_seen')) {
-      // Fallback: show tour if user arrives at /app directly without visiting landing
-      setShowTour(true);
-    }
-  }, [autoStartTour]);
-
-  const handleTourFinish = () => {
-    setShowTour(false);
-    sessionStorage.setItem('qwicknotes_tour_seen', 'true');
-  };
-
-  const { title, content, bgColor, textColor, editorFavorite, tags = [] } = editorDraft;
-
-  const setTitle = val => setEditorDraft(prev => ({ ...prev, title: val }));
-  const setContent = val => setEditorDraft(prev => ({ ...prev, content: val }));
-  const setBgColor = val => setEditorDraft(prev => ({ ...prev, bgColor: val }));
-  const setTextColor = val => setEditorDraft(prev => ({ ...prev, textColor: val }));
-  const setEditorFavorite = val => setEditorDraft(prev => ({ ...prev, editorFavorite: val }));
-  const setEditorTags = val => setEditorDraft(prev => ({ ...prev, tags: val }));
-
-  const [editingId, setEditingId] = useLocalStorage('qwicknotes_editing_id', null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [noteToDelete, setNoteToDelete] = useState(null);
-
-  const [isCreatingTag, setIsCreatingTag] = useState(false);
-  const [newTagName, setNewTagName] = useState('');
-
-  const stripHtml = html => (html ? html.replace(/<[^>]*>/g, '') : '');
-  const isTyping = title.trim() !== '' || stripHtml(content).trim() !== '';
-
-  useEffect(() => {
-    if (editingId) {
-      const noteToEdit = notes.find(n => n.id === editingId);
-      if (noteToEdit) {
-        setEditorDraft({
-          title: noteToEdit.title,
-          content: noteToEdit.content,
-          bgColor: noteToEdit.bgColor || '',
-          textColor: noteToEdit.textColor || '#1f2937',
-          editorFavorite: noteToEdit.isFavorite || false,
-          tags: noteToEdit.tags || [],
-        });
-      } else {
-        setEditingId(null);
-        setEditorDraft(initialDraft);
-      }
-    }
-  }, []);
-
-  const handleCreateTag = () => {
-    const trimmed = newTagName.trim();
-    if (trimmed && !allTags.includes(trimmed)) {
-      setAllTags([trimmed, ...allTags]);
-    }
-    setNewTagName('');
-    setIsCreatingTag(false);
-  };
-
-  const handleDeleteGlobalTag = tagToDelete => {
-    setAllTags(prev => prev.filter(t => t !== tagToDelete));
-    setNotes(prevNotes =>
-      prevNotes.map(n => ({ ...n, tags: n.tags ? n.tags.filter(t => t !== tagToDelete) : [] })),
-    );
-    if (tags.includes(tagToDelete)) setEditorTags(tags.filter(t => t !== tagToDelete));
-    if (filterTag === tagToDelete) setFilterTag(null);
-  };
-
-  const handleDeleteAllGlobalTags = () => {
-    setAllTags([]);
-    setNotes(prevNotes => prevNotes.map(n => ({ ...n, tags: [] })));
-    setEditorTags([]);
-    setFilterTag(null);
-  };
-
-  const handleDeleteAllNotes = () => {
-    setNotes([]);
-    setEditingId(null);
-    setEditorDraft(initialDraft);
-    setFilterTag(null);
-  };
-
-  const filteredNotes = notes.filter(note => {
-    const matchesSearch =
-      note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      stripHtml(note.content).toLowerCase().includes(searchQuery.toLowerCase());
-
-    if (showFavoritesOnly && !note.isFavorite) return false;
-    if (filterTag && !(note.tags && note.tags.includes(filterTag))) return false;
-
-    return matchesSearch;
-  });
-
-  const applySort = (notesList, sortOption) => {
-    const sortedList = [...notesList];
-    switch (sortOption) {
-      case 'Newest First':
-        return sortedList.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-      case 'Oldest First':
-        return sortedList.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
-      case 'Recently Updated':
-        return sortedList.sort(
-          (a, b) => new Date(b.updatedAt || b.createdAt) - new Date(a.updatedAt || a.createdAt),
-        );
-      case 'Largest Size':
-        return sortedList.sort((a, b) => stripHtml(b.content).length - stripHtml(a.content).length);
-      case 'Smallest Size':
-        return sortedList.sort((a, b) => stripHtml(a.content).length - stripHtml(b.content).length);
-      case 'Title A-Z':
-        return sortedList.sort((a, b) => a.title.localeCompare(b.title));
-      case 'Title Z-A':
-        return sortedList.sort((a, b) => b.title.localeCompare(a.title));
-      default:
-        return sortedList;
-    }
-  };
-
-  const displayNotes = applySort(filteredNotes, sortOption);
-
-  const handleSaveNote = () => {
-    if (!title.trim() && !stripHtml(content).trim()) return;
-    if (title.trim() && !stripHtml(content).trim()) {
-      setIsModalOpen(true);
-      return;
-    }
-    createAndSaveNote(content);
-  };
-
-  const createAndSaveNote = noteContent => {
-    if (editingId) {
-      setNotes(prevNotes =>
-        prevNotes.map(n =>
-          n.id === editingId
-            ? {
-                ...n,
-                title: title.trim() || 'Untitled',
-                content: noteContent.trim(),
-                bgColor,
-                textColor,
-                isFavorite: editorFavorite,
-                tags: tags,
-                updatedAt: new Date().toISOString(),
-              }
-            : n,
-        ),
-      );
-      setEditingId(null);
-    } else {
-      const newNote = {
-        id: Date.now(),
-        title: title.trim() || 'Untitled',
-        content: noteContent.trim(),
-        bgColor,
-        textColor,
-        isFavorite: editorFavorite,
-        tags: tags,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      };
-      setNotes([newNote, ...notes]);
-    }
-    setEditorDraft(initialDraft);
-  };
-
-  const handleEditNote = note => {
-    setEditorDraft({
-      title: note.title,
-      content: note.content,
-      bgColor: note.bgColor || '',
-      textColor: note.textColor || '#1f2937',
-      editorFavorite: note.isFavorite || false,
-      tags: note.tags || [],
-    });
-    setEditingId(note.id);
-  };
-
-  const handleToggleFavorite = id =>
-    setNotes(prevNotes =>
-      prevNotes.map(n => (n.id === id ? { ...n, isFavorite: !n.isFavorite } : n)),
-    );
-
-  const handleDeleteNote = id => {
-    setNoteToDelete(id);
-    setIsDeleteModalOpen(true);
-  };
-
-  const handleDeleteConfirmed = () => {
-    if (editingId === noteToDelete) {
-      setEditingId(null);
-      setEditorDraft(initialDraft);
-    }
-    setNotes(notes.filter(note => note.id !== noteToDelete));
-    setIsDeleteModalOpen(false);
-    setNoteToDelete(null);
-  };
-
-  const handleModalConfirm = () => {
-    createAndSaveNote('No description provided.');
-    setIsModalOpen(false);
-  };
-  const handleModalCancel = () => {
-    setIsModalOpen(false);
-  };
+const Dashboard = () => {
+  const {
+    notes,
+    searchQuery,
+    setSearchQuery,
+    sortOption,
+    setSortOption,
+    showFavoritesOnly,
+    setShowFavoritesOnly,
+    filterTag,
+    setFilterTag,
+    allTags,
+    editorDraft,
+    setEditorDraft,
+    editingId,
+    isModalOpen,
+    setIsModalOpen,
+    isDeleteModalOpen,
+    setIsDeleteModalOpen,
+    noteToDelete,
+    isCreatingTag,
+    setIsCreatingTag,
+    newTagName,
+    setNewTagName,
+    isTyping,
+    handleCreateTag,
+    handleDeleteGlobalTag,
+    handleDeleteAllGlobalTags,
+    handleDeleteAllNotes,
+    filteredNotes,
+    displayNotes,
+    handleSaveNote,
+    handleEditNote,
+    handleToggleFavorite,
+    handleDeleteNote,
+    handleDeleteConfirmed,
+    handleModalConfirm,
+    handleModalCancel,
+  } = useNotes();
 
   return (
     <div className="flex flex-row w-full h-[calc(100vh-80px)] p-6 gap-8 overflow-hidden">
-      {/* LEFT COLUMN: Search Bar + Editor */}
       <div className="w-[48%] min-w-[450px] h-full flex flex-col gap-3">
-        {/* Search Bar */}
         <div className="w-full bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 px-4 py-4 flex items-center shrink-0 transition-colors duration-200 search-input">
           <Search size={18} className="text-gray-400 dark:text-gray-500 mr-3" />
           <input
@@ -253,19 +58,19 @@ const Dashboard = ({ autoStartTour = false }) => {
             className="w-full outline-none text-sm text-gray-700 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 bg-transparent"
           />
         </div>
-        {/* Editor Container */}
+
         <div className="flex-1 h-full note-editor-container">
           <NoteEditor
-            title={title}
-            setTitle={setTitle}
-            content={content}
-            setContent={setContent}
-            bgColor={bgColor}
-            setBgColor={setBgColor}
-            textColor={textColor}
-            setTextColor={setTextColor}
-            tags={tags}
-            setTags={setEditorTags}
+            title={editorDraft.title}
+            setTitle={val => setEditorDraft(prev => ({ ...prev, title: val }))}
+            content={editorDraft.content}
+            setContent={val => setEditorDraft(prev => ({ ...prev, content: val }))}
+            bgColor={editorDraft.bgColor}
+            setBgColor={val => setEditorDraft(prev => ({ ...prev, bgColor: val }))}
+            textColor={editorDraft.textColor}
+            setTextColor={val => setEditorDraft(prev => ({ ...prev, textColor: val }))}
+            tags={editorDraft.tags}
+            setTags={val => setEditorDraft(prev => ({ ...prev, tags: val }))}
             allTags={allTags}
             isCreatingTag={isCreatingTag}
             setIsCreatingTag={setIsCreatingTag}
@@ -277,13 +82,14 @@ const Dashboard = ({ autoStartTour = false }) => {
             onSave={handleSaveNote}
             isTyping={isTyping}
             isEditing={!!editingId}
-            isFavorite={editorFavorite}
-            onToggleFavorite={() => setEditorFavorite(!editorFavorite)}
+            isFavorite={editorDraft.editorFavorite}
+            onToggleFavorite={() =>
+              setEditorDraft(prev => ({ ...prev, editorFavorite: !prev.editorFavorite }))
+            }
           />
         </div>
       </div>
 
-      {/* RIGHT COLUMN: Notes List */}
       <div className="flex-1 h-full notes-list-container">
         <NotesList
           notes={displayNotes}
@@ -305,7 +111,6 @@ const Dashboard = ({ autoStartTour = false }) => {
         />
       </div>
 
-      {/* Modals */}
       <ConfirmationModal
         isOpen={isModalOpen}
         onClose={handleModalCancel}
@@ -319,9 +124,6 @@ const Dashboard = ({ autoStartTour = false }) => {
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDeleteConfirmed}
       />
-
-      {/* Tour Component */}
-      <UserGuideTour isOpen={showTour} onClose={handleTourFinish} onFinish={handleTourFinish} />
     </div>
   );
 };

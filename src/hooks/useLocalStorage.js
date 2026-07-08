@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 
 function useLocalStorage(key, initialValue) {
-  // 1. Initialize state with value from localStorage, or fallback to initialValue
+  // Initialize state with value from localStorage, or fallback to initialValue
   const [storedValue, setStoredValue] = useState(() => {
     try {
       const item = window.localStorage.getItem(key);
@@ -12,7 +12,7 @@ function useLocalStorage(key, initialValue) {
     }
   });
 
-  // 2. Define a setter function that updates both React state AND localStorage
+  // Define a setter function that updates both React state AND localStorage
   const setValue = value => {
     try {
       // Allow value to be a function, just like standard useState
@@ -24,7 +24,7 @@ function useLocalStorage(key, initialValue) {
     }
   };
 
-  // 3. Optional: Sync across browser tabs (If user opens app in 2 tabs, updates in one, the other updates too)
+  // Sync across browser tabs (If user opens app in 2 tabs, updates in one, the other updates too)
   useEffect(() => {
     const handleStorageChange = e => {
       if (e.key === key && e.newValue) {

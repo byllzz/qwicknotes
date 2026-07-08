@@ -1,4 +1,3 @@
-import React from 'react';
 import { Trash2, Star } from 'lucide-react';
 
 const DeleteAllNotesModal = ({ isOpen, onClose, onConfirm, notes }) => {
