@@ -157,7 +157,7 @@ const NoteEditor = ({
 
   return (
     <div
-      className={`bg-white rounded-xl shadow-sm border ${isEditing ? 'border-blue-400 border-2 bg-blue-50/20' : 'border-gray-100'} p-6 h-full flex flex-col relative transition-all duration-200`}
+      className={`bg-white rounded-xl shadow-sm border ${isEditing ? 'border-blue-400 border-2 bg-blue-50/20' : 'border-gray-100'} pt-6 pb-2 px-8 h-full flex flex-col relative transition-all duration-200`}
     >
       <div className="flex justify-between items-start mb-4">
         <h2
@@ -248,7 +248,7 @@ const NoteEditor = ({
         )}
 
         {isManageTagsOpen && (
-          <div className="absolute right-0 top-full mt-2 z-20 bg-white border border-gray-200 rounded-lg shadow-lg p-3 w-56 animate-in fade-in zoom-in-95 duration-100">
+          <div className="absolute right-0 top-full z-20 bg-white border border-gray-200 rounded-lg shadow-lg p-3 w-56 animate-in fade-in zoom-in-95 duration-100">
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">
               Manage Tags
             </p>
@@ -390,7 +390,8 @@ const NoteEditor = ({
       </div>
 
       {/* RICH TEXT TOOLBAR & EDITOR */}
-      <div className="bg-gray-50 rounded-lg p-1.5 flex flex-wrap gap-1 mb-3">
+      {/* Add class "editor-toolbar" for tour */}
+      <div className="bg-gray-50 rounded-lg p-1.5 flex flex-wrap gap-1 mb-1.5 editor-toolbar">
         <button
           onClick={() => editor.chain().focus().toggleBold().run()}
           className={`p-1.5 rounded text-gray-600 transition-colors ${editor.isActive('bold') ? 'bg-gray-200 text-black' : 'hover:bg-gray-200'}`}
@@ -459,13 +460,13 @@ const NoteEditor = ({
       </div>
 
       {/* THE ACTUAL EDITOR AREA */}
-      <div className="flex-1 border border-gray-100 rounded-lg p-3 overflow-y-auto bg-white">
+      <div className="flex-1 border border-gray-100 rounded-lg px-3 py-1 overflow-y-auto bg-white">
         <EditorContent editor={editor} />
       </div>
 
       <button
         onClick={onSave}
-        className={`mt-4 w-full py-3 font-medium rounded-lg transition-colors ${isEditing ? 'bg-blue-500 hover:bg-blue-600 text-white' : 'bg-gray-400 hover:bg-gray-500 text-white'}`}
+        className={`mt-4 w-full py-3 font-medium rounded-lg transition-colors ${isEditing ? 'bg-blue-500 hover:bg-blue-600 text-white' : 'bg-black hover:bg-black/90 text-white'}`}
       >
         {isEditing ? 'Update Note' : 'Save Note'}
       </button>

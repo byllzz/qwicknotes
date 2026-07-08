@@ -4,6 +4,7 @@ import NoteEditor from '../features/NewNote/NoteEditor';
 import NotesList from '../features/NotesList/NotesList';
 import ConfirmationModal from '../common/ConfirmationModal';
 import DeleteConfirmationModal from '../common/DeleteConfirmationModal';
+import UserGuideTour from '../common/UserGuideTour';
 import useLocalStorage from '../../hooks/useLocalStorage';
 
 const initialDraft = {
@@ -15,7 +16,8 @@ const initialDraft = {
   tags: [],
 };
 
-const Dashboard = () => {
+// autoStartTour: passed from App when user clicks "Start creating notes" on landing page
+const Dashboard = ({ autoStartTour = false }) => {
   const [notes, setNotes] = useLocalStorage('qwicknotes_notes', []);
   const [searchQuery, setSearchQuery] = useLocalStorage('qwicknotes_search', '');
   const [sortOption, setSortOption] = useLocalStorage('qwicknotes_sort', 'Newest First');
@@ -23,6 +25,25 @@ const Dashboard = () => {
   const [filterTag, setFilterTag] = useLocalStorage('qwicknotes_filter_tag', null);
   const [allTags, setAllTags] = useLocalStorage('qwicknotes_all_tags', ['Work', 'Personal']);
   const [editorDraft, setEditorDraft] = useLocalStorage('qwicknotes_editor_draft', initialDraft);
+
+  // Tour state
+  const [showTour, setShowTour] = useState(false);
+
+  useEffect(() => {
+    if (autoStartTour) {
+      // Small delay so the DOM is fully rendered before the tour tries to find elements
+      const timer = setTimeout(() => setShowTour(true), 300);
+      return () => clearTimeout(timer);
+    } else if (!sessionStorage.getItem('qwicknotes_tour_seen')) {
+      // Fallback: show tour if user arrives at /app directly without visiting landing
+      setShowTour(true);
+    }
+  }, [autoStartTour]);
+
+  const handleTourFinish = () => {
+    setShowTour(false);
+    sessionStorage.setItem('qwicknotes_tour_seen', 'true');
+  };
 
   const { title, content, bgColor, textColor, editorFavorite, tags = [] } = editorDraft;
 
@@ -88,7 +109,6 @@ const Dashboard = () => {
     setFilterTag(null);
   };
 
-  // NEW: Delete all notes function
   const handleDeleteAllNotes = () => {
     setNotes([]);
     setEditingId(null);
@@ -219,20 +239,22 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="flex flex-col w-full h-[calc(100vh-80px)] p-6 gap-4 bg-gray-50 overflow-hidden">
-      <div className="w-full bg-white rounded-xl shadow-sm border border-gray-100 px-4 py-3 flex items-center">
-        <Search size={18} className="text-gray-400 mr-3" />
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={e => setSearchQuery(e.target.value)}
-          placeholder="Search in titles and content..."
-          className="w-full outline-none text-sm text-gray-700 placeholder-gray-400 bg-transparent"
-        />
-      </div>
-
-      <div className="flex flex-row w-full h-full gap-6 overflow-hidden">
-        <div className="w-[42%] min-w-[450px] h-full">
+    <div className="flex flex-row w-full h-[calc(100vh-80px)] p-6 gap-8 overflow-hidden">
+      {/* LEFT COLUMN: Search Bar + Editor */}
+      <div className="w-[48%] min-w-[450px] h-full flex flex-col gap-3">
+        {/* Search Bar */}
+        <div className="w-full bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 px-4 py-4 flex items-center shrink-0 transition-colors duration-200 search-input">
+          <Search size={18} className="text-gray-400 dark:text-gray-500 mr-3" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder="Search in titles and content..."
+            className="w-full outline-none text-sm text-gray-700 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 bg-transparent"
+          />
+        </div>
+        {/* Editor Container */}
+        <div className="flex-1 h-full note-editor-container">
           <NoteEditor
             title={title}
             setTitle={setTitle}
@@ -259,27 +281,31 @@ const Dashboard = () => {
             onToggleFavorite={() => setEditorFavorite(!editorFavorite)}
           />
         </div>
-        <div className="flex-1 h-full">
-          <NotesList
-            notes={displayNotes}
-            rawNotes={filteredNotes}
-            searchQuery={searchQuery}
-            sortOption={sortOption}
-            setSortOption={setSortOption}
-            showFavoritesOnly={showFavoritesOnly}
-            setShowFavoritesOnly={setShowFavoritesOnly}
-            filterTag={filterTag}
-            setFilterTag={setFilterTag}
-            allTags={allTags}
-            currentEditingId={editingId}
-            onEdit={handleEditNote}
-            onDelete={handleDeleteNote}
-            onToggleFavorite={handleToggleFavorite}
-            onDeleteAllNotes={handleDeleteAllNotes} // <--- Pass the new function
-          />
-        </div>
       </div>
 
+      {/* RIGHT COLUMN: Notes List */}
+      <div className="flex-1 h-full notes-list-container">
+        <NotesList
+          notes={displayNotes}
+          rawNotes={filteredNotes}
+          allNotes={notes}
+          searchQuery={searchQuery}
+          sortOption={sortOption}
+          setSortOption={setSortOption}
+          showFavoritesOnly={showFavoritesOnly}
+          setShowFavoritesOnly={setShowFavoritesOnly}
+          filterTag={filterTag}
+          setFilterTag={setFilterTag}
+          allTags={allTags}
+          currentEditingId={editingId}
+          onEdit={handleEditNote}
+          onDelete={handleDeleteNote}
+          onToggleFavorite={handleToggleFavorite}
+          onDeleteAllNotes={handleDeleteAllNotes}
+        />
+      </div>
+
+      {/* Modals */}
       <ConfirmationModal
         isOpen={isModalOpen}
         onClose={handleModalCancel}
@@ -293,6 +319,9 @@ const Dashboard = () => {
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleDeleteConfirmed}
       />
+
+      {/* Tour Component */}
+      <UserGuideTour isOpen={showTour} onClose={handleTourFinish} onFinish={handleTourFinish} />
     </div>
   );
 };

@@ -81,8 +81,11 @@ const NoteCard = ({ note, onCardClick, onEdit, onDelete, onToggleFavorite, curre
       <div
         className={`flex justify-between items-center mt-3 pt-3 ${note.textColor ? `border-t border-black/10` : 'border-t border-gray-200'}`}
       >
-        <div className="flex items-center gap-1.5 text-[10px] font-medium opacity-70">
-          <Clock size={12} /> {dateLabel} {formatDateTime(displayDate)}
+        <div className="flex items-center gap-1 text-[10px] font-medium opacity-70">
+          <Clock size={11} />{' '}
+          <span className="relative top-[1px">
+            {dateLabel} {formatDateTime(displayDate)}
+          </span>
         </div>
         <div
           className="flex items-center gap-3 text-[10px] font-medium"
@@ -92,21 +95,22 @@ const NoteCard = ({ note, onCardClick, onEdit, onDelete, onToggleFavorite, curre
             onClick={() => {
               if (!isEditingThisCard) onEdit(note);
             }}
-            className={`flex items-center gap-1 transition-opacity ${isEditingThisCard ? 'opacity-30 cursor-not-allowed' : 'opacity-70 hover:opacity-100'}`}
+            className={`flex items-center text-[12px] gap-1 transition-opacity ${isEditingThisCard ? 'opacity-30 cursor-not-allowed' : 'opacity-70 hover:opacity-100'}`}
             title={isEditingThisCard ? 'Cannot edit while already in left panel' : 'Edit note'}
           >
-            <Pencil size={11} /> Edit
+            <Pencil size={12} /> Edit
           </button>
-          <span className="opacity-50 font-normal text-[10px]">{sizeLabel}</span>
+
           <button
             onClick={() => {
               if (!isEditingThisCard) onDelete(note.id);
             }}
-            className={`flex items-center gap-1 transition-colors ${isEditingThisCard ? 'text-gray-300 cursor-not-allowed opacity-30' : 'text-red-400 hover:text-red-600'}`}
+            className={`flex items-center gap-1 text-[12px] transition-colors ${isEditingThisCard ? 'text-gray-300 cursor-not-allowed opacity-30' : 'text-red-400 hover:text-red-600'}`}
             title={isEditingThisCard ? 'Cannot delete while editing in left panel' : 'Delete note'}
           >
-            <Trash2 size={11} /> Delete
+            <Trash2 size={12} /> Delete
           </button>
+          <span className="opacity-50 font-normal text-[10px]">{sizeLabel}</span>
         </div>
       </div>
     </div>
