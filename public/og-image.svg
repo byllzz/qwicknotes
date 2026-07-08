@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#9B72FF" />
+      <stop offset="100%" stop-color="#6C3CE1" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg)" />
+  <!-- Plus icon (logo) -->
+  <circle cx="600" cy="240" r="50" fill="white" opacity="0.2" />
+  <text x="600" y="260" font-family="Inter, sans-serif" font-size="80" font-weight="300" fill="white" text-anchor="middle" dominant-baseline="central">Qwicknotes</text>
+  <text x="600" y="330" font-family="Inter, sans-serif" font-size="30" font-weight="200" fill="rgba(255,255,255,0.8)" text-anchor="middle" dominant-baseline="central">Notes that stay on your device.</text>
+  <!-- Decorative dots -->
+  <circle cx="100" cy="100" r="15" fill="white" opacity="0.1" />
+  <circle cx="1100" cy="500" r="25" fill="white" opacity="0.1" />
+  <circle cx="200" cy="500" r="10" fill="white" opacity="0.15" />
+</svg>
