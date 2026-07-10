@@ -22,7 +22,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col items-center m-0 font-sans text-gray-800 dark:text-gray-200 transition-colors duration-200">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col overflow-y-auto items-center m-0 font-sans text-gray-800 dark:text-gray-200 transition-colors duration-200">
       <Header onOpenAbout={() => setIsAboutOpen(true)} onOpenTour={() => setIsTourOpen(true)} />
       <div className="w-full max-w-[1300px] transition-colors duration-200">
         <Dashboard />
