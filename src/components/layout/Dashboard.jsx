@@ -46,7 +46,7 @@ const Dashboard = () => {
   } = useNotes();
 
   return (
-    <div className="flex flex-row w-full h-[calc(100vh-80px)] p-6 gap-8 overflow-y-auto">
+    <div className="flex flex-row w-full h-[calc(100vh-80px)] p-6 gap-8">
       <div className="w-[48%] min-w-[450px] h-full flex flex-col gap-3">
         <div className="w-full bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 px-4 py-4 flex items-center shrink-0 transition-colors duration-200 search-input">
           <Search size={18} className="text-gray-400 dark:text-gray-500 mr-3" />
