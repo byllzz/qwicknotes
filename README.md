@@ -1,3 +1,4 @@
+<!-- project logo -->
 <p align="center">
   <img src="./src/assets/favicon.svg" width="120" alt="Qwicknotes Logo" />
 </p>
