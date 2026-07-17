@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
 /* Enable class-based dark mode in Tailwind v4 */
-/* @variant dark (&:where(.dark, .dark *)); */
+@variant dark (&:where(.dark, .dark *));
 
 * {
   scrollbar-width: none;
