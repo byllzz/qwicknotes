@@ -14,9 +14,6 @@
   <a href="./LICENSE">
     <img src="https://img.shields.io/badge/License-MIT-9B72FF.svg?style=flat" alt="MIT License" />
   </a>
-  <img src="https://img.shields.io/badge/Status-Active-9B72FF.svg?style=flat" alt="Status" />
-  <img src="https://img.shields.io/badge/Website-Online-9B72FF.svg?style=flat" alt="Website" />
-  <img src="https://img.shields.io/badge/Open%20Source-❤-9B72FF.svg?style=flat" alt="Open Source" />
   <a href="https://github.com/byllzz">
     <img src="https://img.shields.io/badge/Author-Bilal%20Malik-9B72FF.svg?style=flat" alt="Author" />
   </a>
