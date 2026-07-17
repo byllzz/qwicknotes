@@ -57,7 +57,7 @@ const NoteEditor = ({
     editorProps: {
       attributes: {
         class:
-          'prose prose-sm max-w-none outline-none min-h-[150px] text-inherit [&_p.is-empty]:before:content-[attr(data-placeholder)] [&_p.is-empty]:before:text-gray-400 [&_p.is-empty]:before:float-left [&_p.is-empty]:before:pointer-events-none [&_p.is-empty]:before:h-0',
+          'prose prose-sm max-w-none outline-none min-h-[100px] text-inherit [&_p.is-empty]:before:content-[attr(data-placeholder)] [&_p.is-empty]:before:text-gray-400 [&_p.is-empty]:before:float-left [&_p.is-empty]:before:pointer-events-none [&_p.is-empty]:before:h-0',
       },
     },
   });
