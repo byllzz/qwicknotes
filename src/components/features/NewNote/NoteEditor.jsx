@@ -157,7 +157,7 @@ const NoteEditor = ({
 
       <button
         onClick={onSave}
-        className={`mt-4 w-full py-3 font-medium rounded-lg transition-colors ${
+        className={`mt-4 mb-2 w-full py-3 font-medium rounded-lg transition-colors ${
           isEditing
             ? 'bg-blue-500 hover:bg-blue-600 text-white'
             : 'bg-black hover:bg-black/90 text-white'
