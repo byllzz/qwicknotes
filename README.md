@@ -35,7 +35,7 @@
 
 ## What is Qwicknotes?
 
-**Qwicknotes** is a free, open-source note-taking application that lives entirely in your browser. Every note, tag, and preference is saved to your device's `localStorage` – no servers, no sign‑up, no cloud.
+**Qwicknotes** is a free, open-source note-taking application that lives entirely in your browser. Every note, tag, and preference is saved to your device's `localStorage` - no servers, no sign‑up, no cloud.
 
 Write with a rich‑text editor, organise with tags and favourites, search instantly, and export your notes in multiple formats. Whether you're jotting down quick ideas, maintaining a personal knowledge base, or planning your next project, Qwicknotes gives you a clean, fast, and private workspace.
 
@@ -112,7 +112,6 @@ First‑time users get a step‑by‑step tour that highlights key parts of the 
 | **Export a single note** | Open a note (click its card) → click **Export** → choose format |
 | **Export all notes** | Click the **Export** button in the notes list controls → choose bulk option |
 | **Delete all notes** | Click the **Delete All** button in the notes list controls (confirmation required) |
-| **Toggle dark mode** | Click the slider in the header (☀️/🌙) |
 | **Open the tour** | Click the **?** (Help Circle) button in the header |
 
 ---
