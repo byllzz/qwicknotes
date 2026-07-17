@@ -16,7 +16,6 @@
   </a>
   <img src="https://img.shields.io/badge/Status-Active-9B72FF.svg?style=flat" alt="Status" />
   <img src="https://img.shields.io/badge/Website-Online-9B72FF.svg?style=flat" alt="Website" />
-  <img src="https://img.shields.io/badge/Made%20With-React-9B72FF.svg?style=flat&logo=react&logoColor=white" alt="Made with React" />
   <img src="https://img.shields.io/badge/Open%20Source-❤-9B72FF.svg?style=flat" alt="Open Source" />
   <a href="https://github.com/byllzz">
     <img src="https://img.shields.io/badge/Author-Bilal%20Malik-9B72FF.svg?style=flat" alt="Author" />
